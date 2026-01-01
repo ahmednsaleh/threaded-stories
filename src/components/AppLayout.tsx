@@ -1,13 +1,38 @@
 import * as React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
 import { cn } from '../lib/utils';
 import { Menu } from 'lucide-react';
 import { Button } from './ui/button';
 import { Toaster } from './ui/sonner';
+import { useAuth } from '../contexts/AuthContext';
+import { useEffect } from 'react';
 
 export const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect unauthenticated users to auth page
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-[#FAFAFA] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C2410C]" />
+      </div>
+    );
+  }
+
+  // Don't render layout for unauthenticated users
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="relative min-h-screen w-full bg-[#FAFAFA] flex flex-col md:flex-row">

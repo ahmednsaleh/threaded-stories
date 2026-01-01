@@ -3,6 +3,9 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
+import { useAuth } from '../contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // A simple Google icon component to avoid external dependencies
 const GoogleIcon = () => (
@@ -17,13 +20,36 @@ const GoogleIcon = () => (
 
 export default function Auth() {
   const navigate = useNavigate();
+  const { user, loading, signInWithGoogle } = useAuth();
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
-  const handleLogin = () => {
-    // In a real app, this would trigger the OAuth flow.
-    // For this demo, we'll just log and redirect.
-    console.log(`Attempting login with google`);
-    navigate('/dashboard');
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  const handleLogin = async () => {
+    setIsSigningIn(true);
+    const { error } = await signInWithGoogle();
+    
+    if (error) {
+      toast.error('Failed to sign in', {
+        description: error.message,
+      });
+      setIsSigningIn(false);
+    }
+    // Don't reset isSigningIn on success - we're redirecting to OAuth
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-[#FAFAFA] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C2410C]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#FAFAFA] flex flex-col items-center justify-center p-4 selection:bg-[#C2410C]/20">
@@ -49,11 +75,18 @@ export default function Auth() {
           <Button 
             className="w-full h-12 bg-[#C2410C] hover:bg-[#9A3412] text-white font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 text-base"
             onClick={handleLogin}
+            disabled={isSigningIn}
           >
-            <div className="bg-white p-1 rounded-full mr-3 flex items-center justify-center">
-              <GoogleIcon />
-            </div>
-            <span>Sign in with Google</span>
+            {isSigningIn ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+            ) : (
+              <>
+                <div className="bg-white p-1 rounded-full mr-3 flex items-center justify-center">
+                  <GoogleIcon />
+                </div>
+                <span>Sign in with Google</span>
+              </>
+            )}
           </Button>
 
         </CardContent>
