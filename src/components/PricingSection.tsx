@@ -5,7 +5,7 @@ import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 interface FeatureItem {
-  text: string;
+  text?: string;
   highlight?: string;
   suffix?: string;
 }
