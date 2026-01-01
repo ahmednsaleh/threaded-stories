@@ -91,13 +91,6 @@ export type Database = {
             foreignKeyName: "lead_feedback_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: "calibration_data"
-            referencedColumns: ["lead_id"]
-          },
-          {
-            foreignKeyName: "lead_feedback_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
@@ -688,75 +681,6 @@ export type Database = {
       }
     }
     Views: {
-      calibration_data: {
-        Row: {
-          ai_score: number | null
-          created_at: string | null
-          feedback_category: string | null
-          human_rating: number | null
-          lead_id: string | null
-          product_id: string | null
-        }
-        Relationships: []
-      }
-      daily_product_performance_report: {
-        Row: {
-          analyzed: number | null
-          business_type: string | null
-          "high_intent (>7)": number | null
-          keyword_count: number | null
-          last_strategy: string | null
-          product_name: string | null
-          "qualified (>5)": number | null
-          report_date: string | null
-          runs_completed: number | null
-          scanned: number | null
-          status: string | null
-          subreddit_count: number | null
-        }
-        Relationships: []
-      }
-      health_monitor_v1: {
-        Row: {
-          active_products_24h: number | null
-          data_failures_24h: number | null
-          high_intent_leads_24h: number | null
-          total_products: number | null
-        }
-        Relationships: []
-      }
-      subreddit_quality_overview: {
-        Row: {
-          active_last_week: number | null
-          avg_commercial_score: number | null
-          avg_daily_posts: number | null
-          community_type_count: number | null
-          high_activity: number | null
-          high_commercial: number | null
-          total_subreddits: number | null
-          with_commercial_score: number | null
-          with_embeddings: number | null
-        }
-        Relationships: []
-      }
-      threaddits_advanced_metrics: {
-        Row: {
-          avg_discovery_saturation: number | null
-          avg_time_to_first_lead_mins: number | null
-          global_cprl: number | null
-          global_signal_to_noise_ratio: number | null
-        }
-        Relationships: []
-      }
-      threaddits_dashboard: {
-        Row: {
-          data_failures: number | null
-          high_intent_24h: number | null
-          leads_last_24h: number | null
-          stale_products_count: number | null
-        }
-        Relationships: []
-      }
       threaddits_metrics_cached: {
         Row: {
           avg_discovery_saturation: number | null
