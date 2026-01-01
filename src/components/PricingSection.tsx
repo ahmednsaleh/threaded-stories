@@ -4,6 +4,12 @@ import { Check, Zap } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 
+interface FeatureItem {
+  text: string;
+  highlight?: string;
+  suffix?: string;
+}
+
 const PricingCard = ({ 
   title, 
   price, 
@@ -16,7 +22,7 @@ const PricingCard = ({
   title: string, 
   price: string, 
   description: string, 
-  features: string[], 
+  features: FeatureItem[], 
   isPopular?: boolean,
   buttonText?: string,
   onAction: () => void
@@ -54,7 +60,12 @@ const PricingCard = ({
             "w-5 h-5 flex-shrink-0",
             isPopular ? "text-[#C2410C]" : "text-slate-400"
           )} />
-          <span dangerouslySetInnerHTML={{ __html: feature }} />
+          <span>
+            {feature.highlight && (
+              <span className="font-bold text-[#2C3E50]">{feature.highlight}</span>
+            )}
+            {feature.suffix || feature.text}
+          </span>
         </li>
       ))}
     </ul>
@@ -99,11 +110,11 @@ export const PricingSection = () => {
               isPopular={true}
               description="Perfect for bootstrappers and solo founders validating an idea."
               features={[
-                "1 Active Product Slot", 
-                "Unlimited Lead Scanning", 
-                "Hourly AI Scans (Real-time)", 
-                "<span class='font-bold text-[#2C3E50]'>Self-Healing AI</span>: Auto-learns from feedback", 
-                "Manual Reply Links"
+                { text: "1 Active Product Slot" }, 
+                { text: "Unlimited Lead Scanning" }, 
+                { text: "Hourly AI Scans (Real-time)" }, 
+                { highlight: "Self-Healing AI", suffix: ": Auto-learns from feedback" }, 
+                { text: "Manual Reply Links" }
               ]}
               buttonText="Start Hunting"
               onAction={() => navigate('/auth')}
@@ -116,11 +127,11 @@ export const PricingSection = () => {
               isPopular={false}
               description="For serious builders and agencies ready to scale their outreach."
               features={[
-                "Everything in Starter, plus:",
-                "3 Active Product Slots", 
-                "Real-time Alerts & Slack Integration",
-                "Advanced Matching Logic",
-                "Priority Support"
+                { text: "Everything in Starter, plus:" },
+                { text: "3 Active Product Slots" }, 
+                { text: "Real-time Alerts & Slack Integration" },
+                { text: "Advanced Matching Logic" },
+                { text: "Priority Support" }
               ]}
               buttonText="Upgrade to Pro"
               onAction={() => navigate('/auth')}
