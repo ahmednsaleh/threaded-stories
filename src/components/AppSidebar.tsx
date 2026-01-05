@@ -13,10 +13,11 @@ import {
 import { Button } from './ui/button';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
+import { useTotalNewLeadsCount } from '../hooks/useTotalNewLeadsCount';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/feed', icon: MessageSquare, label: 'Leads', badge: '45' },
+  { href: '/feed', icon: MessageSquare, label: 'Leads' },
   { href: '/products', icon: Layers, label: 'Products' },
   { href: '/settings', icon: CreditCard, label: 'Billing' },
 ];
@@ -30,6 +31,7 @@ interface AppSidebarProps {
 export const AppSidebar: React.FC<AppSidebarProps> = ({ className, isMobileOpen, onMobileClose }) => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { data: newLeadsCount = 0 } = useTotalNewLeadsCount();
 
   const handleLogout = async () => {
     await signOut();
@@ -57,9 +59,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ className, isMobileOpen,
               {isActive && <div className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-1 bg-[#C2410C] rounded-full" />}
               <item.icon className="h-5 w-5" />
               <span className="flex-1">{item.label}</span>
-              {item.badge && (
+              {item.label === 'Leads' && newLeadsCount > 0 && (
                 <span className="rounded-full bg-[#C2410C] px-2.5 py-0.5 text-[11px] font-bold text-white">
-                  {item.badge}
+                  {newLeadsCount}
                 </span>
               )}
             </>

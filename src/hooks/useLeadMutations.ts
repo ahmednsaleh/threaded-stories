@@ -17,6 +17,7 @@ export function useUpdateLeadStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       queryClient.invalidateQueries({ queryKey: ['lead-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['total-new-leads-count'] });
     },
     onError: (error) => {
       toast.error('Failed to update status', { description: error.message });
@@ -44,6 +45,7 @@ export function useUpdateLeadFeedback() {
     onSuccess: (_, { feedback }) => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       queryClient.invalidateQueries({ queryKey: ['lead-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['total-new-leads-count'] });
       
       if (feedback === 'good') {
         toast.success('Marked as Good Lead', { description: 'The engine will prioritize similar patterns.' });
