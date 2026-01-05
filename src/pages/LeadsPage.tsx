@@ -190,7 +190,7 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
         </div>
 
         {/* Control Strip */}
-        <div className="flex items-center justify-between gap-6 shrink-0 mb-2 relative z-0">
+        <div className="flex items-center justify-between gap-6 shrink-0 mb-2 relative z-30">
           <div className="relative w-full max-md group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 transition-colors group-focus-within:text-[#C2410C]" />
             <input 
@@ -209,7 +209,7 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
               {isStatusMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsStatusMenuOpen(false)} />
-                  <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                     {(['Show All', 'New', 'Contacted', 'Won', 'Rejected'] as StatusFilter[]).map((status) => (
                       <button
                         key={status}
@@ -231,7 +231,7 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
               {isTimeMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsTimeMenuOpen(false)} />
-                  <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                     {(['Last 24h', 'Last Week', 'Last Month', 'All Time'] as TimeFilter[]).map((time) => (
                       <button
                         key={time}
