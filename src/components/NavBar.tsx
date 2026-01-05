@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { Button } from './ui/button';
-import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
+import { useAuth } from '../contexts/AuthContext';
 
 export const NavBar = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -24,13 +25,24 @@ export const NavBar = () => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-8">
-          <Button 
-            onClick={() => handleNavigation('/auth')}
-            variant="ghost"
-            className="text-slate-600 hover:text-slate-900 font-medium text-base hover:bg-transparent"
-          >
-            Log in
-          </Button>
+          {!loading && (
+            user ? (
+              <Button 
+                onClick={() => handleNavigation('/dashboard')}
+                className="bg-[#C2410C] hover:bg-[#9A3412] text-white font-medium text-base"
+              >
+                Go to Dashboard
+              </Button>
+            ) : (
+              <Button 
+                onClick={() => handleNavigation('/auth')}
+                variant="ghost"
+                className="text-slate-600 hover:text-slate-900 font-medium text-base hover:bg-transparent"
+              >
+                Log in
+              </Button>
+            )
+          )}
         </div>
       </div>
     </nav>
