@@ -14,6 +14,7 @@ import { Button } from './ui/button';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { useTotalNewLeadsCount } from '../hooks/useTotalNewLeadsCount';
+import { supabase } from '../integrations/supabase/client';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -32,6 +33,45 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ className, isMobileOpen,
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { data: newLeadsCount = 0 } = useTotalNewLeadsCount();
+  const [profileData, setProfileData] = React.useState<{
+    fullName: string;
+    avatarUrl: string | null;
+  }>({ fullName: '', avatarUrl: null });
+
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id) return;
+      
+      const { data } = await supabase
+        .from('users')
+        .select('full_name, avatar_url')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) {
+        setProfileData({
+          fullName: data.full_name || '',
+          avatarUrl: data.avatar_url
+        });
+      }
+    };
+    
+    fetchProfile();
+    
+    // Listen for updates from profile page
+    const handleProfileUpdate = (event: CustomEvent) => {
+      setProfileData({
+        fullName: event.detail.fullName,
+        avatarUrl: event.detail.avatarUrl
+      });
+    };
+    
+    window.addEventListener('profile-updated', handleProfileUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdate as EventListener);
+    };
+  }, [user?.id]);
 
   const handleLogout = async () => {
     await signOut();
@@ -105,11 +145,17 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ className, isMobileOpen,
             isActive ? "bg-slate-800" : "hover:bg-slate-800"
           )}
         >
-          <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-white ring-2 ring-slate-600 group-hover:ring-slate-500 transition-all flex-shrink-0">
-            {user?.email?.slice(0, 2).toUpperCase() || 'U'}
+          <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-white ring-2 ring-slate-600 group-hover:ring-slate-500 transition-all flex-shrink-0 overflow-hidden">
+            {profileData.avatarUrl ? (
+              <img src={profileData.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              user?.email?.slice(0, 2).toUpperCase() || 'U'
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">{user?.email?.split('@')[0] || 'User'}</p>
+            <p className="text-sm font-semibold text-white truncate">
+              {profileData.fullName || user?.email?.split('@')[0] || 'User'}
+            </p>
             <p className="text-xs text-slate-400 truncate">Free Plan</p>
           </div>
         </NavLink>

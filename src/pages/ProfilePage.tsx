@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
-import { User, Mail, Camera, Lock, Trash2 } from 'lucide-react';
+import { User, Mail, Camera, Lock, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,7 +15,9 @@ export default function ProfilePage() {
   const [email, setEmail] = React.useState('');
   const [subscriptionTier, setSubscriptionTier] = React.useState('free');
   const [activeSince, setActiveSince] = React.useState('');
-  const [profileImage, setProfileImage] = React.useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState(false);
+  const [uploading, setUploading] = React.useState(false);
 
   React.useEffect(() => {
     const fetchUserProfile = async () => {
@@ -25,13 +27,14 @@ export default function ProfilePage() {
       
       const { data: profile } = await supabase
         .from('users')
-        .select('full_name, subscription_tier, updated_at')
+        .select('full_name, subscription_tier, updated_at, avatar_url')
         .eq('id', user.id)
         .single();
       
       if (profile) {
         setFullName(profile.full_name || '');
         setSubscriptionTier(profile.subscription_tier || 'free');
+        setAvatarUrl(profile.avatar_url || null);
         const date = new Date(profile.updated_at || Date.now());
         setActiveSince(`Active since ${date.toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' })}`);
       }
@@ -43,16 +46,70 @@ export default function ProfilePage() {
   const handleDeleteAccount = () => toast.error("Action restricted in preview environment.");
   const handleAvatarClick = () => fileInputRef.current?.click();
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImage(reader.result as string);
-        toast.success("Profile picture updated");
-      };
-      reader.readAsDataURL(file);
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+    
+    const { error } = await supabase
+      .from('users')
+      .update({ 
+        full_name: fullName,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+    
+    if (error) {
+      toast.error('Failed to save profile');
+    } else {
+      toast.success('Profile saved successfully!');
+      window.dispatchEvent(new CustomEvent('profile-updated', { 
+        detail: { fullName, avatarUrl } 
+      }));
     }
+    setSaving(false);
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+    
+    setUploading(true);
+    
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user.id}/avatar.${fileExt}`;
+
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      toast.error('Failed to upload avatar');
+      setUploading(false);
+      return;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    // Save URL to database
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ avatar_url: publicUrl })
+      .eq('id', user.id);
+
+    if (updateError) {
+      toast.error('Failed to save avatar');
+    } else {
+      setAvatarUrl(publicUrl);
+      toast.success('Profile picture updated!');
+      window.dispatchEvent(new CustomEvent('profile-updated', { 
+        detail: { fullName, avatarUrl: publicUrl } 
+      }));
+    }
+    setUploading(false);
   };
 
   return (
@@ -67,12 +124,19 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row items-center gap-8 mb-10">
               <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
                 <div className="w-24 h-24 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-slate-400 overflow-hidden shadow-inner">
-                  {profileImage ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" /> : <User className="w-12 h-12" />}
+                  {avatarUrl ? <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" /> : <User className="w-12 h-12" />}
                 </div>
                 <div className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <Camera className="w-6 h-6 text-white mb-1" /><span className="text-white text-[10px] font-bold uppercase tracking-widest">Change</span>
+                  {uploading ? (
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  ) : (
+                    <>
+                      <Camera className="w-6 h-6 text-white mb-1" />
+                      <span className="text-white text-[10px] font-bold uppercase tracking-widest">Change</span>
+                    </>
+                  )}
                 </div>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" disabled={uploading} />
               </div>
               <div className="text-center sm:text-left space-y-2">
                 <h2 className="text-3xl font-bold text-slate-900 tracking-tight">{fullName}</h2>
@@ -102,6 +166,24 @@ export default function ProfilePage() {
                   <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                 </div>
               </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end mt-8">
+              <Button
+                onClick={handleSave}
+                disabled={saving || !fullName.trim()}
+                className="bg-[#C2410C] hover:bg-[#C2410C]/90 text-white font-bold px-8 h-12 rounded-full transition-all"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
