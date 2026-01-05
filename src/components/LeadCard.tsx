@@ -5,7 +5,6 @@ import {
   HeartCrack, 
   Flame, 
   Swords, 
-  Target, 
   ThumbsUp, 
   ThumbsDown, 
   ChevronDown,
@@ -18,12 +17,11 @@ import {
   Ban,
   Signal,
   ExternalLink,
-  Zap,
-  MessageCircle
+  Zap
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
-import { toast } from 'sonner';
+import { useUpdateLeadStatus, useUpdateLeadFeedback } from '../hooks/useLeadMutations';
 
 export interface LeadCardProps {
   id: string;
@@ -40,14 +38,15 @@ export interface LeadCardProps {
   product_name?: string;
   buying_stage?: string;
   sentiment?: string;
-  initiallyExpanded?: boolean; // Kept for API compatibility, though design is now open-faced
+  status?: string;
+  initiallyExpanded?: boolean;
   className?: string;
   post_url?: string;
   noAnimation?: boolean;
 }
 
 const renderHighlightedSummary = (text: string, competitors: string) => {
-  if (!competitors || competitors === "No direct competitors mentioned") return text;
+  if (!competitors || competitors === "No direct competitors mentioned" || competitors === "None") return text;
   const compList = competitors.split(',').map(c => c.trim()).filter(c => c.length > 0);
   if (compList.length === 0) return text;
   const regex = new RegExp(`(${compList.join('|')})`, 'gi');
@@ -59,15 +58,16 @@ const renderHighlightedSummary = (text: string, competitors: string) => {
 };
 
 const funnelStatuses = [
-  { id: 'new', label: 'New', color: 'bg-blue-500', icon: Mail },
-  { id: 'contacted', label: 'Contacted', color: 'bg-amber-400', icon: Send },
-  { id: 'won', label: 'Won', color: 'bg-emerald-500', icon: Trophy },
-  { id: 'rejected', label: 'Rejected', color: 'bg-slate-400', icon: Ban },
+  { id: 'New', label: 'New', color: 'bg-blue-500', icon: Mail },
+  { id: 'Contacted', label: 'Contacted', color: 'bg-amber-400', icon: Send },
+  { id: 'Won', label: 'Won', color: 'bg-emerald-500', icon: Trophy },
+  { id: 'Rejected', label: 'Rejected', color: 'bg-slate-400', icon: Ban },
 ] as const;
 
 type FunnelStatus = typeof funnelStatuses[number]['id'];
 
 export const LeadCard: React.FC<LeadCardProps> = ({ 
+  id,
   username,
   intent_score,
   source_subreddit,
@@ -81,6 +81,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
   product_name = "Threaddits",
   buying_stage = "Actively Shopping",
   sentiment = "High Urgency",
+  status = "New",
   className,
   post_url = "https://reddit.com",
   noAnimation = false
@@ -88,9 +89,18 @@ export const LeadCard: React.FC<LeadCardProps> = ({
   const [isDraftVisible, setIsDraftVisible] = React.useState(false);
   const [isDrafting, setIsDrafting] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
-  const [currentStatus, setCurrentStatus] = React.useState<FunnelStatus>('new');
+  const [currentStatus, setCurrentStatus] = React.useState<FunnelStatus>(status as FunnelStatus);
   const [isStatusMenuOpen, setIsStatusMenuOpen] = React.useState(false);
   const [isDismissed, setIsDismissed] = React.useState(false);
+
+  // Mutations
+  const updateStatus = useUpdateLeadStatus();
+  const updateFeedback = useUpdateLeadFeedback();
+
+  // Sync status from props
+  React.useEffect(() => {
+    setCurrentStatus(status as FunnelStatus);
+  }, [status]);
 
   const cleanSubreddit = source_subreddit.startsWith('r/') ? source_subreddit : `r/${source_subreddit}`;
 
@@ -114,10 +124,19 @@ export const LeadCard: React.FC<LeadCardProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleStatusChange = (status: FunnelStatus) => {
-    setCurrentStatus(status);
+  const handleStatusChange = (newStatus: FunnelStatus) => {
+    setCurrentStatus(newStatus);
     setIsStatusMenuOpen(false);
-    toast.success(`Status updated to ${status.charAt(0).toUpperCase() + status.slice(1)}`);
+    updateStatus.mutate({ leadId: id, status: newStatus });
+  };
+
+  const handleGoodLead = () => {
+    updateFeedback.mutate({ leadId: id, feedback: 'good' });
+  };
+
+  const handleBadLead = () => {
+    setIsDismissed(true);
+    updateFeedback.mutate({ leadId: id, feedback: 'bad' });
   };
 
   if (isDismissed) return null;
@@ -134,9 +153,16 @@ export const LeadCard: React.FC<LeadCardProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5">
         <div className="flex flex-wrap items-center gap-2">
            {/* Score Badge */}
-           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold tracking-wide shadow-sm">
+           <div className={cn(
+             "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide shadow-sm border",
+             intent_score >= 8 
+               ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+               : intent_score >= 5 
+                 ? "bg-amber-50 text-amber-700 border-amber-100"
+                 : "bg-slate-50 text-slate-600 border-slate-200"
+           )}>
              <Signal className="w-3.5 h-3.5" />
-             {intent_score.toFixed(1)} STRONG SIGNAL
+             {intent_score.toFixed(1)} {intent_score >= 8 ? 'STRONG SIGNAL' : intent_score >= 5 ? 'POTENTIAL' : 'LOW SIGNAL'}
            </div>
            
            {/* Tag 1: Buying Stage (Purple/Pink) */}
@@ -156,7 +182,8 @@ export const LeadCard: React.FC<LeadCardProps> = ({
              variant="ghost" 
              size="sm" 
              className="h-8 px-3 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors flex items-center gap-1.5 border border-transparent hover:border-emerald-100" 
-             onClick={() => toast.success("Marked as Good Lead", { description: "The engine will prioritize similar patterns." })}
+             onClick={handleGoodLead}
+             disabled={updateFeedback.isPending}
            >
              <ThumbsUp className="w-3.5 h-3.5" />
              <span className="text-xs font-medium">Good Lead</span>
@@ -165,10 +192,8 @@ export const LeadCard: React.FC<LeadCardProps> = ({
            <Button 
              variant="ghost" 
              size="sm" 
-             onClick={() => {
-                setIsDismissed(true);
-                toast.info("Marked as Bad Lead", { description: "Pattern pruned from future searches." });
-             }}
+             onClick={handleBadLead}
+             disabled={updateFeedback.isPending}
              className="h-8 px-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors flex items-center gap-1.5 border border-transparent hover:border-rose-100" 
            >
              <ThumbsDown className="w-3.5 h-3.5" />
@@ -245,22 +270,23 @@ export const LeadCard: React.FC<LeadCardProps> = ({
              onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
              variant="outline" 
              className="h-9 text-xs font-bold text-slate-600 gap-2 rounded-full border-slate-200 pl-2 pr-3 bg-white hover:bg-slate-50"
+             disabled={updateStatus.isPending}
            >
-              <div className={cn("w-2 h-2 rounded-full", funnelStatuses.find(s => s.id === currentStatus)?.color)} />
-              {funnelStatuses.find(s => s.id === currentStatus)?.label}
+              <div className={cn("w-2 h-2 rounded-full", funnelStatuses.find(s => s.id === currentStatus)?.color || 'bg-blue-500')} />
+              {funnelStatuses.find(s => s.id === currentStatus)?.label || currentStatus}
               <ChevronDown className="w-3 h-3 opacity-50 ml-1"/>
            </Button>
 
            {isStatusMenuOpen && (
              <div className="absolute bottom-full left-0 mb-2 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                {funnelStatuses.map((status) => (
+                {funnelStatuses.map((statusItem) => (
                   <button
-                    key={status.id}
-                    onClick={() => handleStatusChange(status.id)}
+                    key={statusItem.id}
+                    onClick={() => handleStatusChange(statusItem.id)}
                     className="w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 flex items-center gap-2"
                   >
-                    <div className={cn("w-2 h-2 rounded-full", status.color)} />
-                    {status.label}
+                    <div className={cn("w-2 h-2 rounded-full", statusItem.color)} />
+                    {statusItem.label}
                   </button>
                 ))}
              </div>
