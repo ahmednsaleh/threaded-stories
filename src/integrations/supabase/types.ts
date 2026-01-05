@@ -681,16 +681,7 @@ export type Database = {
       }
     }
     Views: {
-      threaddits_metrics_cached: {
-        Row: {
-          avg_discovery_saturation: number | null
-          avg_time_to_first_lead_mins: number | null
-          global_cprl: number | null
-          global_signal_to_noise_ratio: number | null
-          id: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       current_auth_uid: { Args: never; Returns: string }
