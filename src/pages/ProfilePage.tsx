@@ -1,17 +1,44 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
-import { User, Mail, Camera, Lock, Trash2, AlertTriangle } from 'lucide-react';
+import { User, Mail, Camera, Lock, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { cn } from '../lib/utils';
 import { toast } from 'sonner';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../integrations/supabase/client';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [fullName, setFullName] = React.useState('Ahmed Saleh');
-  const [email] = React.useState('ahmed@example.com');
+  const [fullName, setFullName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [subscriptionTier, setSubscriptionTier] = React.useState('free');
+  const [activeSince, setActiveSince] = React.useState('');
   const [profileImage, setProfileImage] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      setEmail(user.email || '');
+      
+      const { data: profile } = await supabase
+        .from('users')
+        .select('full_name, subscription_tier, updated_at')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile) {
+        setFullName(profile.full_name || '');
+        setSubscriptionTier(profile.subscription_tier || 'free');
+        const date = new Date(profile.updated_at || Date.now());
+        setActiveSince(`Active since ${date.toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' })}`);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
 
   const handleDeleteAccount = () => toast.error("Action restricted in preview environment.");
   const handleAvatarClick = () => fileInputRef.current?.click();
@@ -50,9 +77,9 @@ export default function ProfilePage() {
               <div className="text-center sm:text-left space-y-2">
                 <h2 className="text-3xl font-bold text-slate-900 tracking-tight">{fullName}</h2>
                 <div className="flex items-center justify-center sm:justify-start gap-3">
-                  <span className="text-emerald-600 font-bold text-xs uppercase tracking-widest">Pro Member</span>
+                  <span className="text-emerald-600 font-bold text-xs uppercase tracking-widest">{subscriptionTier === 'pro' ? 'Pro Member' : 'Free Plan'}</span>
                   <span className="text-slate-300 font-mono">•</span>
-                  <span className="text-slate-400 text-sm font-mono tracking-tight">Active since 12/23</span>
+                  <span className="text-slate-400 text-sm font-mono tracking-tight">{activeSince || 'Active'}</span>
                 </div>
               </div>
             </div>
