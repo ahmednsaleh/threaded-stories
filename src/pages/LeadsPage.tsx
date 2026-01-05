@@ -207,7 +207,9 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
                 <Filter className="w-3.5 h-3.5" /> {statusFilter} <ChevronDown className="w-3.5 h-3.5" />
               </Button>
               {isStatusMenuOpen && (
-                 <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsStatusMenuOpen(false)} />
+                  <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                     {(['Show All', 'New', 'Contacted', 'Won', 'Rejected'] as StatusFilter[]).map((status) => (
                       <button
                         key={status}
@@ -217,7 +219,8 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
                         {status}
                       </button>
                     ))}
-                 </div>
+                  </div>
+                </>
               )}
             </div>
             
@@ -226,7 +229,9 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
                 <Clock className="w-3.5 h-3.5" /> {timeFilter} <ChevronDown className="w-3.5 h-3.5" />
               </Button>
               {isTimeMenuOpen && (
-                 <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsTimeMenuOpen(false)} />
+                  <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                     {(['Last 24h', 'Last Week', 'Last Month', 'All Time'] as TimeFilter[]).map((time) => (
                       <button
                         key={time}
@@ -236,7 +241,8 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
                         {time}
                       </button>
                     ))}
-                 </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -266,7 +272,13 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
                 urgency_signals_detail={lead.urgency_signals_detail || 'Not specified'}
                 competitors_mentioned={lead.competitive_context_detail || lead.competitors_mentioned || 'None'}
                 buying_stage={lead.buying_stage_detail || (lead.is_solution_seeking ? 'Solution Seeking' : 'Researching')}
-                sentiment={lead.sentiment || 'Neutral'}
+                sentiment={
+                  lead.urgency_signals_detail?.toLowerCase().includes('high') || lead.urgency_signals_detail?.toLowerCase().includes('immediate')
+                    ? 'High Urgency'
+                    : lead.urgency_signals_detail?.toLowerCase().includes('medium')
+                      ? 'Medium Urgency'
+                      : 'Low Urgency'
+                }
                 status={lead.status}
                 product_name={activeProduct?.product_name || 'Product'}
                 initiallyExpanded={index === 0} 
