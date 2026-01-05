@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Logo } from './Logo';
+import { useAuth } from '../contexts/AuthContext';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -28,9 +29,10 @@ interface AppSidebarProps {
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({ className, isMobileOpen, onMobileClose }) => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
-  const handleLogout = () => {
-    // In a real app, clear sessions/tokens here
+  const handleLogout = async () => {
+    await signOut();
     navigate('/auth');
   };
 
@@ -102,11 +104,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ className, isMobileOpen,
           )}
         >
           <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-white ring-2 ring-slate-600 group-hover:ring-slate-500 transition-all flex-shrink-0">
-            AS
+            {user?.email?.slice(0, 2).toUpperCase() || 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">Ahmed Saleh</p>
-            <p className="text-xs text-slate-400 truncate">Pro Plan</p>
+            <p className="text-sm font-semibold text-white truncate">{user?.email?.split('@')[0] || 'User'}</p>
+            <p className="text-xs text-slate-400 truncate">Free Plan</p>
           </div>
         </NavLink>
 
