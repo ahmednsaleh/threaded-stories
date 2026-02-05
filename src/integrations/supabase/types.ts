@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      brain_entries: {
+        Row: {
+          bot_response: string | null
+          content: string
+          created_at: string | null
+          embedding: string | null
+          entry_type: string
+          id: string
+          metadata: Json | null
+          source: string
+          title: string | null
+          user_message: string | null
+        }
+        Insert: {
+          bot_response?: string | null
+          content: string
+          created_at?: string | null
+          embedding?: string | null
+          entry_type: string
+          id?: string
+          metadata?: Json | null
+          source: string
+          title?: string | null
+          user_message?: string | null
+        }
+        Update: {
+          bot_response?: string | null
+          content?: string
+          created_at?: string | null
+          embedding?: string | null
+          entry_type?: string
+          id?: string
+          metadata?: Json | null
+          source?: string
+          title?: string | null
+          user_message?: string | null
+        }
+        Relationships: []
+      }
       keyword_performance: {
         Row: {
           conversion_rate: number
@@ -681,7 +720,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      threaddits_metrics_cached: {
+        Row: {
+          avg_discovery_saturation: number | null
+          avg_time_to_first_lead_mins: number | null
+          cached_at: string | null
+          data_amnesia_rate: number | null
+          failed_runs_7d: number | null
+          freemium_unlock_rate: number | null
+          global_cprl: number | null
+          global_signal_to_noise_ratio: number | null
+          last_run_at: string | null
+          leads_last_24h: number | null
+          leads_last_7d: number | null
+          stale_portfolio_rate: number | null
+          successful_runs_7d: number | null
+          total_high_intent_leads: number | null
+          total_leads: number | null
+          total_products: number | null
+          total_qualified_leads: number | null
+          total_subreddits_tracked: number | null
+          user_feedback_rejection_rate: number | null
+          workflow_success_status: string | null
+          zero_result_rate: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       current_auth_uid: { Args: never; Returns: string }
@@ -723,6 +787,27 @@ export type Database = {
         Returns: number
       }
       is_product_owner: { Args: { prod_uuid: string }; Returns: boolean }
+      match_brain_entries: {
+        Args: {
+          filter_source?: string
+          filter_type?: string
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          bot_response: string
+          content: string
+          created_at: string
+          entry_type: string
+          id: string
+          metadata: Json
+          similarity: number
+          source: string
+          title: string
+          user_message: string
+        }[]
+      }
       match_rejection_patterns: {
         Args: {
           match_count: number
