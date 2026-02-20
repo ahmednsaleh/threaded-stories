@@ -130,7 +130,16 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialUrl }) =>
       ];
 
       let currentIndex = 0;
+      let animationDone = false;
+      let apiDone = false;
+      let cancelled = false;
       setLogs([]);
+
+      const tryTransition = () => {
+        if (animationDone && apiDone && !cancelled) {
+          setStep('review');
+        }
+      };
 
       const interval = setInterval(() => {
         if (currentIndex < logSteps.length) {
@@ -138,6 +147,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialUrl }) =>
           currentIndex++;
         } else {
           clearInterval(interval);
+          // Add a small buffer after last log entry for visual polish
+          setTimeout(() => {
+            animationDone = true;
+            tryTransition();
+          }, 1000);
         }
       }, 800);
 
@@ -149,6 +163,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialUrl }) =>
           });
 
           if (error) throw error;
+          if (cancelled) return;
 
           setFormData({
             productName: data?.product_name || data?.name || '',
@@ -164,16 +179,20 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialUrl }) =>
               : [],
           });
 
-          // Wait for log animation to finish, then transition
-          setTimeout(() => setStep('review'), Math.max(0, logSteps.length * 800 + 1000 - 2000));
+          apiDone = true;
+          tryTransition();
         } catch (err: any) {
+          if (cancelled) return;
           console.error('Analysis failed:', err);
           toast.error('Analysis failed', { description: err.message || 'Could not analyze the URL. Try again.' });
           setStep('input');
         }
       })();
 
-      return () => clearInterval(interval);
+      return () => {
+        cancelled = true;
+        clearInterval(interval);
+      };
     }
   }, [step]);
 
