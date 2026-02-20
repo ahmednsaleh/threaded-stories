@@ -1,0 +1,36 @@
+<svg width="240" height="40" viewBox="0 0 240 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .brand-text { 
+        font-family: 'Geist Mono', 'SF Mono', 'Roboto Mono', 'JetBrains Mono', monospace; 
+        font-weight: 700; 
+        font-size: 32px; 
+        fill: #2C3E50; 
+        letter-spacing: -0.06em; 
+      }
+      .pixel-dot { 
+        fill: #C2410C; 
+      }
+      .stem {
+        fill: #2C3E50;
+      }
+    </style>
+  </defs>
+
+  <!-- Baseline alignment group -->
+  <g transform="translate(0, 30)">
+    <!-- "Threadd" -->
+    <text x="0" y="0" class="brand-text">Threadd</text>
+
+    <!-- Constructed 'i' -->
+    <!-- Stem -->
+    <rect x="145" y="-17" width="8" height="17" rx="1" class="stem" />
+    
+    <!-- The Data Pixel (Orange Square) -->
+    <!-- Separated from stem by 4px -->
+    <rect x="145" y="-29" width="8" height="8" rx="0.5" class="pixel-dot" />
+
+    <!-- "ts" -->
+    <text x="161" y="0" class="brand-text">ts</text>
+  </g>
+</svg>
