@@ -37,8 +37,8 @@ export const FooterSection = () => {
           <div className="col-span-1">
             <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4">Legal</h3>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="text-slate-300 hover:text-[#C2410C] transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="text-slate-300 hover:text-[#C2410C] transition-colors">Terms of Service</a></li>
+              <li><a href="/privacy" className="text-slate-300 hover:text-[#C2410C] transition-colors">Privacy Policy</a></li>
+              <li><a href="/terms" className="text-slate-300 hover:text-[#C2410C] transition-colors">Terms of Service</a></li>
             </ul>
           </div>
         </div>
@@ -46,7 +46,7 @@ export const FooterSection = () => {
         {/* Bottom section with copyright */}
         <div className="border-t border-[#3b5066] pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-slate-400">
-            © 2025 Threaddits. All rights reserved.
+            © 2026 Threaddits. All rights reserved.
           </p>
         </div>
       </div>

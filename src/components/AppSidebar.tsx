@@ -14,6 +14,7 @@ import { Button } from './ui/button';
 import { Logo } from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { useTotalNewLeadsCount } from '../hooks/useTotalNewLeadsCount';
+import { useUserProfile } from '../hooks/useUserProfile';
 import { supabase } from '../integrations/supabase/client';
 
 const navItems = [
@@ -33,6 +34,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ className, isMobileOpen,
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { data: newLeadsCount = 0 } = useTotalNewLeadsCount();
+  const { data: userProfile } = useUserProfile();
   const [profileData, setProfileData] = React.useState<{
     fullName: string;
     avatarUrl: string | null;
@@ -156,7 +158,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ className, isMobileOpen,
             <p className="text-sm font-semibold text-white truncate">
               {profileData.fullName || user?.email?.split('@')[0] || 'User'}
             </p>
-            <p className="text-xs text-slate-400 truncate">Free Plan</p>
+            <p className="text-xs text-slate-400 truncate">{userProfile?.subscription_tier ? `${userProfile.subscription_tier.charAt(0).toUpperCase()}${userProfile.subscription_tier.slice(1)} Plan` : 'Free Plan'}</p>
           </div>
         </NavLink>
 

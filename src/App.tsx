@@ -13,6 +13,8 @@ import ProfilePage from "./pages/ProfilePage";
 import LeadsPage from "./pages/LeadsPage";
 import ProductsPage from "./pages/ProductsPage";
 import EditProductPage from "./pages/EditProductPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import { AppLayout } from "./components/AppLayout";
 
 const queryClient = new QueryClient();
@@ -27,6 +29,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Homepage />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
 
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />

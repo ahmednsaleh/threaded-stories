@@ -3,16 +3,16 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { MagicInput } from './MagicInput';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  Check, 
-  Loader2, 
-  Target, 
-  Zap, 
-  Globe, 
-  Search, 
-  Plus, 
+import {
+  Sparkles,
+  ArrowRight,
+  Check,
+  Loader2,
+  Target,
+  Zap,
+  Globe,
+  Search,
+  Plus,
   X,
   CheckCircle2,
   Terminal,
@@ -23,6 +23,10 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../integrations/supabase/client';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface OnboardingFlowProps {
   initialUrl?: string;
@@ -79,10 +83,12 @@ const TagInput: React.FC<TagInputProps> = ({ tags, onAdd, onRemove, placeholder,
 
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialUrl }) => {
   const navigate = useNavigate();
-  
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
   // State Machine
   const [step, setStep] = useState<Step>(initialUrl ? 'analysis' : 'input');
-  
+
   // Data State
   const [url, setUrl] = useState(initialUrl || '');
   const [logs, setLogs] = useState<string[]>([]);
@@ -94,17 +100,21 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialUrl }) =>
 
   // Review Form State
   const [formData, setFormData] = useState({
-    productName: 'Threaddits',
-    targetPersona: 'B2B SaaS Founders & Growth Marketers',
-    primaryJob: 'Automate high-intent lead generation from Reddit conversations.',
-    valueProposition: 'The only autonomous lead engine that identifies buying intent, filters noise, and drafts replies.',
-    painsFrustrations: 'Manual prospecting takes hours, LinkedIn ads have high CAC, and finding high-intent leads amongst the noise is difficult.',
-    subreddits: ['r/SaaS', 'r/entrepreneur', 'r/marketing', 'r/growthhacking'],
-    keywords: ['reddit leads', 'saas marketing', 'customer acquisition']
+    productName: '',
+    targetPersona: '',
+    primaryJob: '',
+    valueProposition: '',
+    painsFrustrations: '',
+    subreddits: [] as string[],
+    keywords: [] as string[]
   });
 
   // --- STEP 1: INPUT ---
   const handleAnalyze = (inputUrl: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     setUrl(inputUrl);
     setStep('analysis');
   };
@@ -118,17 +128,50 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialUrl }) =>
         "Mapping Pains & Frustrations...",
         "Generating strategic keywords...",
       ];
-      
+
       let currentIndex = 0;
+      setLogs([]);
+
       const interval = setInterval(() => {
         if (currentIndex < logSteps.length) {
           setLogs(prev => [...prev, logSteps[currentIndex]]);
           currentIndex++;
         } else {
           clearInterval(interval);
-          setTimeout(() => setStep('review'), 1000);
         }
-      }, 1000);
+      }, 800);
+
+      // Call edge function in parallel with log animation
+      (async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('extract-product-info', {
+            body: { url: url.trim() },
+          });
+
+          if (error) throw error;
+
+          setFormData({
+            productName: data?.product_name || data?.name || '',
+            targetPersona: data?.persona || data?.audience || data?.target_audience || '',
+            primaryJob: data?.primary_job || data?.jobs_to_be_done || '',
+            valueProposition: data?.product_description || data?.description || data?.value_proposition || '',
+            painsFrustrations: data?.pain_points_solved || data?.pains || '',
+            subreddits: data?.subreddits
+              ? (Array.isArray(data.subreddits) ? data.subreddits : data.subreddits.split(',').map((s: string) => s.trim()).filter(Boolean))
+              : [],
+            keywords: data?.keywords
+              ? (Array.isArray(data.keywords) ? data.keywords : data.keywords.split(',').map((s: string) => s.trim()).filter(Boolean))
+              : [],
+          });
+
+          // Wait for log animation to finish, then transition
+          setTimeout(() => setStep('review'), Math.max(0, logSteps.length * 800 + 1000 - 2000));
+        } catch (err: any) {
+          console.error('Analysis failed:', err);
+          toast.error('Analysis failed', { description: err.message || 'Could not analyze the URL. Try again.' });
+          setStep('input');
+        }
+      })();
 
       return () => clearInterval(interval);
     }
@@ -137,20 +180,67 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialUrl }) =>
   // --- STEP 4: LAUNCH EFFECTS ---
   useEffect(() => {
     if (step === 'launch') {
-      // Sequence the status updates
       const timers: ReturnType<typeof setTimeout>[] = [];
-      
+
+      // Animate status items
       launchStatus.forEach((_, index) => {
         timers.push(setTimeout(() => {
-           setLaunchStatus(prev => prev.map((item, i) => {
-             if (i === index) return { ...item, status: 'active' };
-             if (i === index - 1) return { ...item, status: 'done' };
-             return item;
-           }));
+          setLaunchStatus(prev => prev.map((item, i) => {
+            if (i === index) return { ...item, status: 'active' };
+            if (i === index - 1) return { ...item, status: 'done' };
+            return item;
+          }));
         }, index * 1200));
       });
 
-      // Final Redirect
+      // Create product in Supabase and call onboard-product
+      (async () => {
+        try {
+          if (!user) {
+            navigate('/auth');
+            return;
+          }
+
+          const { data: product, error: insertError } = await supabase.from('products').insert({
+            user_id: user.id,
+            product_name: formData.productName,
+            product_description: formData.valueProposition,
+            persona: formData.targetPersona,
+            pain_points_solved: formData.painsFrustrations,
+            jobs_to_be_done: formData.primaryJob,
+            product_url: url.trim() || null,
+            business_type: 'B2B',
+            status: 'active',
+            subreddits: formData.subreddits,
+            keywords: formData.keywords,
+          }).select('id').single();
+
+          if (insertError) throw insertError;
+
+          // Call onboard-product edge function to kick off the engine
+          if (product?.id) {
+            try {
+              await supabase.functions.invoke('onboard-product', {
+                body: { product_id: product.id },
+              });
+            } catch (e) {
+              // Non-fatal: product created, engine will pick it up on next cycle
+              console.error('onboard-product edge function error:', e);
+            }
+          }
+
+          // Mark onboarding complete
+          await supabase.from('users').update({ onboarding_complete: true }).eq('id', user.id);
+
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+          queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+        } catch (err: any) {
+          console.error('Product creation failed:', err);
+          toast.error('Failed to create product', { description: err.message });
+        }
+      })();
+
+      // Final redirect after animation
       timers.push(setTimeout(() => {
         setLaunchStatus(prev => prev.map(item => ({ ...item, status: 'done' })));
         setTimeout(() => navigate('/dashboard'), 800);

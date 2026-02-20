@@ -36,6 +36,7 @@ export interface LeadCardProps {
   urgency_signals_detail: string;
   competitors_mentioned?: string;
   product_name?: string;
+  product_id?: string;
   buying_stage?: string;
   sentiment?: string;
   status?: string;
@@ -79,6 +80,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
   urgency_signals_detail,
   competitors_mentioned = "None",
   product_name = "Threaddits",
+  product_id,
   buying_stage = "Actively Shopping",
   sentiment = "High Urgency",
   status = "New",
@@ -136,7 +138,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
 
   const handleBadLead = () => {
     setIsDismissed(true);
-    updateFeedback.mutate({ leadId: id, feedback: 'bad' });
+    updateFeedback.mutate({ leadId: id, feedback: 'bad', postUrl: post_url, productId: product_id });
   };
 
   if (isDismissed) return null;

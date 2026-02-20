@@ -281,7 +281,8 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
                 }
                 status={lead.status}
                 product_name={activeProduct?.product_name || 'Product'}
-                initiallyExpanded={index === 0} 
+                product_id={activeProductId || undefined}
+                initiallyExpanded={index === 0}
                 noAnimation={isShowcase}
               />
             ))

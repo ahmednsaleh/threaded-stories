@@ -67,12 +67,12 @@ const Sidebar = () => {
         {/* Footer Links */}
         <div className="text-xs text-muted-foreground space-y-2 px-2">
           <div className="flex flex-wrap gap-x-3 gap-y-1">
-            <a href="#" className="hover:text-foreground transition-colors">About</a>
-            <a href="#" className="hover:text-foreground transition-colors">Help</a>
-            <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-            <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
+            <a href="/" className="hover:text-foreground transition-colors">About</a>
+            <a href="mailto:support@threaddits.com" className="hover:text-foreground transition-colors">Help</a>
+            <a href="/terms" className="hover:text-foreground transition-colors">Terms</a>
+            <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a>
           </div>
-          <p>© 2024 Threaddits</p>
+          <p>© 2026 Threaddits</p>
         </div>
       </div>
     </aside>

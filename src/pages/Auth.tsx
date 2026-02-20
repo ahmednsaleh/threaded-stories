@@ -93,7 +93,7 @@ export default function Auth() {
       </Card>
       
       <p className="text-center text-sm text-slate-500 mt-8 max-w-xs font-medium">
-        By continuing, you agree to the Threaddits <a href="#" className="text-slate-700 underline hover:text-slate-900">Terms of Service</a> and <a href="#" className="text-slate-700 underline hover:text-slate-900">Privacy Policy</a>.
+        By continuing, you agree to the Threaddits <a href="/terms" className="text-slate-700 underline hover:text-slate-900">Terms of Service</a> and <a href="/privacy" className="text-slate-700 underline hover:text-slate-900">Privacy Policy</a>.
       </p>
 
     </div>

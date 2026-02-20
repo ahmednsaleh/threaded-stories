@@ -1,19 +1,21 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { 
-  X, 
-  Sparkles, 
-  ArrowRight, 
-  Loader2, 
-  Globe, 
-  Target, 
-  Zap, 
+import {
+  X,
+  Sparkles,
+  ArrowRight,
+  Loader2,
+  Globe,
+  Target,
+  Zap,
   Plus,
   Check
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
+import { supabase } from '../integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -21,18 +23,12 @@ interface AddProductModalProps {
   onSave: (product: any) => void;
 }
 
-// Mock analysis result
-const MOCK_ANALYSIS = {
-  name: "ScaleFast",
-  description: "An automated lead generation tool that helps B2B agencies find clients on Reddit without manual searching.",
-  audience: "B2B Agencies / Founders",
-  painPoints: ["Manual Prospecting", "Low Lead Quality", "Time Consuming"]
-};
-
 export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSave }) => {
   const [step, setStep] = useState<'input' | 'analyzing' | 'review'>('input');
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Form State (Review Step)
   const [formData, setFormData] = useState({
@@ -50,22 +46,42 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
       setUrl('');
       setFormData({ name: '', description: '', audience: '', painPoints: [] });
       setIsAnalyzing(false);
+      setAnalysisError(null);
     }
   }, [isOpen]);
 
-  // Handle Analysis Simulation
-  const handleAnalyze = () => {
+  // Handle Analysis via edge function
+  const handleAnalyze = async () => {
     if (!url.trim()) return;
-    
+
     setStep('analyzing');
     setIsAnalyzing(true);
+    setAnalysisError(null);
 
-    // Simulate AI delay
-    setTimeout(() => {
-      setFormData(MOCK_ANALYSIS);
+    try {
+      const { data, error } = await supabase.functions.invoke('extract-product-info', {
+        body: { url: url.trim() },
+      });
+
+      if (error) throw error;
+
+      setFormData({
+        name: data?.product_name || data?.name || '',
+        description: data?.product_description || data?.description || '',
+        audience: data?.persona || data?.audience || data?.target_audience || '',
+        painPoints: data?.pain_points_solved
+          ? data.pain_points_solved.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : data?.painPoints || [],
+      });
       setIsAnalyzing(false);
       setStep('review');
-    }, 2000);
+    } catch (err: any) {
+      console.error('Analysis failed:', err);
+      setIsAnalyzing(false);
+      setAnalysisError(err.message || 'Analysis failed');
+      setStep('input');
+      toast.error('Analysis failed', { description: err.message || 'Could not analyze the URL. Try again or enter details manually.' });
+    }
   };
 
   // Handle Pain Point Management
@@ -93,14 +109,36 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
     }
   };
 
-  const handleSave = () => {
-    onSave({
-      ...formData,
-      status: 'active',
-      leadsThisWeek: 0,
-      avgScore: 0
-    });
-    onClose();
+  const handleSave = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Not authenticated', { description: 'Please sign in first.' });
+        return;
+      }
+
+      const { data, error } = await supabase.from('products').insert({
+        user_id: user.id,
+        product_name: formData.name,
+        product_description: formData.description,
+        persona: formData.audience,
+        pain_points_solved: formData.painPoints.join(', '),
+        product_url: url.trim() || null,
+        business_type: 'B2B',
+        status: 'active',
+      }).select('id').single();
+
+      if (error) throw error;
+
+      // Invalidate products cache so all product lists refresh
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+
+      toast.success('Product created!', { description: 'Your engine will start hunting shortly.' });
+      onSave(formData);
+      onClose();
+    } catch (err: any) {
+      toast.error('Failed to create product', { description: err.message });
+    }
   };
 
   if (!isOpen) return null;
@@ -108,16 +146,16 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300"
         onClick={onClose}
       />
 
       {/* Modal Container */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
-        
+
         {/* Close Button */}
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors z-10"
         >
@@ -130,7 +168,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
             <div className="w-14 h-14 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center mb-6 shadow-sm">
               <Globe className="w-7 h-7 text-[#2C3E50]" />
             </div>
-            
+
             <h2 className="text-2xl md:text-3xl font-bold text-[#2C3E50] mb-3">
               Add New Product
             </h2>
@@ -153,7 +191,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
               />
             </div>
 
-            <Button 
+            {analysisError && (
+              <p className="mt-3 text-sm text-red-500">{analysisError}</p>
+            )}
+
+            <Button
               onClick={handleAnalyze}
               disabled={!url.trim()}
               className="mt-6 w-full max-w-lg h-12 bg-[#C2410C] hover:bg-[#A3360A] text-white font-bold text-base rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
@@ -195,7 +237,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              
+
               {/* Product Name */}
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Product Name</label>
@@ -235,12 +277,12 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
                   <Zap className="w-3 h-3" /> Pain Points Solved
                 </label>
-                
+
                 <div className="flex flex-wrap gap-2">
                   {formData.painPoints.map((point, index) => (
                     <div key={index} className="inline-flex items-center bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full text-sm font-medium border border-slate-200 group">
                       {point}
-                      <button 
+                      <button
                         onClick={() => removePainPoint(index)}
                         className="ml-2 text-slate-400 hover:text-red-500 focus:outline-none"
                       >
@@ -257,8 +299,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
                       placeholder="Add pain point..."
                       className="bg-white border-b border-slate-300 focus:border-[#C2410C] px-1 py-1 text-sm outline-none w-full"
                     />
-                    <button 
-                      onClick={addPainPoint} 
+                    <button
+                      onClick={addPainPoint}
                       disabled={!newPainPoint.trim()}
                       className="text-slate-400 hover:text-[#C2410C] disabled:opacity-30"
                     >
@@ -271,14 +313,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
             </div>
 
             <div className="p-6 border-t border-slate-100 bg-white flex items-center justify-between gap-4">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => setStep('input')}
                 className="text-slate-500 hover:text-slate-800"
               >
                 Back
               </Button>
-              <Button 
+              <Button
                 onClick={handleSave}
                 className="flex-1 md:flex-none bg-[#C2410C] hover:bg-[#A3360A] text-white font-bold px-8 rounded-full"
               >

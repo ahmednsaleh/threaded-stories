@@ -1,67 +1,54 @@
 
 import * as React from 'react';
 import { useState } from 'react';
-import { 
-  Plus, 
-  Lock, 
-  Activity, 
-  Pause, 
-  Play, 
-  Edit2, 
-  Trash2, 
-  Target, 
+import {
+  Plus,
+  Lock,
+  Activity,
+  Pause,
+  Play,
+  Edit2,
+  Trash2,
+  Target,
   Zap,
   ChevronRight,
-  Clock
+  Clock,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { AddProductModal } from '../components/AddProductModal';
 import { useNavigate } from 'react-router-dom';
+import { useProducts, Product } from '../hooks/useProducts';
+import { useToggleProductStatus } from '../hooks/useProduct';
+import { useLeadMetrics } from '../hooks/useLeadMetrics';
+import { useUserProfile } from '../hooks/useUserProfile';
+import { formatTimeAgo } from '../lib/formatTimeAgo';
 
-const USER_PLAN: 'STARTER' | 'PRO' = 'STARTER';
 const SLOTS_COUNT = 3;
 
-interface Product {
-  id: string;
-  name: string;
-  status: 'active' | 'paused';
-  persona: string;
-  pain_points: string[];
-  stats: {
-    total_leads: number;
-    avg_score: number;
-    last_run_at: string;
-  };
-}
-
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    name: 'Intercom Alternative',
-    status: 'active',
-    persona: 'Bootstrapped SaaS Founders',
-    pain_points: ['High Costs', 'Complex UI', 'Bloat'],
-    stats: {
-      total_leads: 1240,
-      avg_score: 8.4,
-      last_run_at: new Date().toISOString()
-    }
-  }
-];
+const ProductCardMetrics: React.FC<{ productId: string }> = ({ productId }) => {
+  const { data: metrics } = useLeadMetrics(productId);
+  return (
+    <span className="text-4xl font-bold font-mono text-slate-900 tracking-tighter">
+      {metrics?.total?.toLocaleString() || '0'}
+    </span>
+  );
+};
 
 const ProductCard: React.FC<{ product: Product, onToggle: (id: string) => void, onDelete: (id: string) => void }> = ({ product, onToggle, onDelete }) => {
   const navigate = useNavigate();
   const isActive = product.status === 'active';
-  
+  const painPoints = product.pain_points_solved ? product.pain_points_solved.split(',').map(s => s.trim()).filter(Boolean) : [];
+
   return (
     <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
-      
+
       {/* Zone A: Header (Identity & Quality) */}
       <div className="flex items-start justify-between mb-6">
         <div>
-           <h3 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">{product.name}</h3>
+           <h3 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">{product.product_name}</h3>
            <div className="flex items-center gap-2 mt-1.5">
               <span className={cn("relative flex h-2 w-2 rounded-full", isActive ? "bg-emerald-500" : "bg-slate-300")}>
                 {isActive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
@@ -70,16 +57,6 @@ const ProductCard: React.FC<{ product: Product, onToggle: (id: string) => void, 
                 {isActive ? 'Live Hunting' : 'Paused'}
               </span>
            </div>
-        </div>
-        
-        {/* Quality Badge */}
-        <div className={cn(
-            "px-2.5 py-1 rounded-full border text-[11px] font-mono font-bold flex items-center gap-1.5",
-            product.stats.avg_score >= 8
-                ? "bg-emerald-50 border-emerald-100 text-emerald-700"
-                : "bg-slate-50 border-slate-100 text-slate-600"
-        )}>
-           <span>AVG {product.stats.avg_score.toFixed(1)}</span>
         </div>
       </div>
 
@@ -91,28 +68,30 @@ const ProductCard: React.FC<{ product: Product, onToggle: (id: string) => void, 
                <Target className="w-3 h-3" /> TARGET
             </div>
             <div className="text-sm font-medium text-slate-700 leading-snug line-clamp-2 min-h-[1.25rem]">
-               {product.persona}
+               {product.persona || 'Not specified'}
             </div>
          </div>
 
          {/* Triggers */}
-         <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono mb-1.5 flex items-center gap-1.5">
-               <Zap className="w-3 h-3" /> TRIGGERS
-            </div>
-            <div className="flex flex-wrap gap-2">
-               {product.pain_points.slice(0, 2).map((pt, i) => (
-                  <span key={i} className="px-2 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200 text-xs font-medium">
-                     {pt}
-                  </span>
-               ))}
-               {product.pain_points.length > 2 && (
-                  <span className="px-2 py-1 rounded-md bg-slate-50 text-slate-400 border border-slate-100 text-xs font-medium">
-                     +{product.pain_points.length - 2}
-                  </span>
-               )}
-            </div>
-         </div>
+         {painPoints.length > 0 && (
+           <div>
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono mb-1.5 flex items-center gap-1.5">
+                 <Zap className="w-3 h-3" /> TRIGGERS
+              </div>
+              <div className="flex flex-wrap gap-2">
+                 {painPoints.slice(0, 2).map((pt, i) => (
+                    <span key={i} className="px-2 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200 text-xs font-medium">
+                       {pt}
+                    </span>
+                 ))}
+                 {painPoints.length > 2 && (
+                    <span className="px-2 py-1 rounded-md bg-slate-50 text-slate-400 border border-slate-100 text-xs font-medium">
+                       +{painPoints.length - 2}
+                    </span>
+                 )}
+              </div>
+           </div>
+         )}
       </div>
 
       {/* Zone C: The Yield (North Star Metric) */}
@@ -121,13 +100,13 @@ const ProductCard: React.FC<{ product: Product, onToggle: (id: string) => void, 
             LEADS FOUND
          </div>
          <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-bold font-mono text-slate-900 tracking-tighter">
-               {product.stats.total_leads.toLocaleString()}
-            </span>
+            <ProductCardMetrics productId={product.id} />
          </div>
          <div className="flex items-center gap-1.5 mt-2 text-slate-400">
             <Clock className="w-3 h-3" />
-            <span className="text-xs font-mono">Last sweep: 14m ago</span>
+            <span className="text-xs font-mono">
+              {product.last_run_at ? `Last sweep: ${formatTimeAgo(product.last_run_at)}` : 'No sweeps yet'}
+            </span>
          </div>
       </div>
 
@@ -176,24 +155,26 @@ const EmptySlot: React.FC<{ isLocked: boolean, onAction: () => void }> = ({ isLo
 };
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const { data: products = [], isLoading } = useProducts();
+  const { data: userProfile } = useUserProfile();
+  const toggleStatus = useToggleProductStatus();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+  const navigate = useNavigate();
+
+  const subscriptionTier = userProfile?.subscription_tier?.toUpperCase() || 'STARTER';
+  const isPro = subscriptionTier === 'PRO';
+
   const handleToggleStatus = (id: string) => {
-    setProducts(prev => prev.map(p => {
-      if (p.id === id) {
-        const newStatus = p.status === 'active' ? 'paused' : 'active';
-        toast.success(newStatus === 'active' ? "Hunting Resumed" : "Hunting Paused");
-        return { ...p, status: newStatus };
-      }
-      return p;
-    }));
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+    const newStatus = product.status === 'active' ? 'paused' : 'active';
+    toggleStatus.mutate({ productId: id, newStatus });
   };
 
-  const handleDelete = (id: string) => toast.info("Deletion is locked for safety in this demo.");
+  const handleDelete = (id: string) => toast.info("Deletion is locked for safety.");
 
   const handleAddProduct = () => {
-    if (USER_PLAN === 'STARTER' && products.length >= 1) {
+    if (subscriptionTier === 'STARTER' && products.length >= 1) {
       toast.error("Plan limit reached", { description: "Upgrade to Pro ($49/mo) to add more products." });
       return;
     }
@@ -201,21 +182,18 @@ export default function ProductsPage() {
   };
 
   const handleSaveProduct = (data: any) => {
-    // Map the incoming form data (which matches the AddProductModal fields) to our internal Product structure
-    const newProd: Product = { 
-      id: Math.random().toString(36).substr(2, 9), 
-      name: data.name, 
-      status: 'active', 
-      persona: data.audience, 
-      pain_points: data.painPoints, 
-      stats: {
-        total_leads: 0,
-        avg_score: 0,
-        last_run_at: new Date().toISOString()
-      }
-    };
-    setProducts([...products, newProd]);
+    // After save, refetch products via invalidation in the modal
+    setIsModalOpen(false);
   };
+
+  if (isLoading) {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <p className="text-slate-400 mt-4 text-sm">Loading products...</p>
+      </main>
+    );
+  }
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10 h-full overflow-y-auto">
@@ -225,18 +203,18 @@ export default function ProductsPage() {
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-slate-900">My Products</h1>
             <div className="flex items-center gap-3 mt-3">
-               <div className="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-200">Plan: {USER_PLAN}</div>
+               <div className="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-200">Plan: {subscriptionTier}</div>
                <p className="text-slate-400 text-sm font-medium">Manage target personas and value propositions.</p>
             </div>
           </div>
-          {USER_PLAN === 'PRO' && <Button onClick={handleAddProduct} className="bg-[#C2410C] text-white h-12 px-8 rounded-full font-bold shadow-lg hover:-translate-y-0.5 transition-all"><Plus className="w-5 h-5 mr-2" /> Add Product</Button>}
+          {isPro && <Button onClick={handleAddProduct} className="bg-[#C2410C] text-white h-12 px-8 rounded-full font-bold shadow-lg hover:-translate-y-0.5 transition-all"><Plus className="w-5 h-5 mr-2" /> Add Product</Button>}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
           {products.map(product => <ProductCard key={product.id} product={product} onToggle={handleToggleStatus} onDelete={handleDelete} />)}
-          {Array.from({ length: SLOTS_COUNT - products.length }).map((_, idx) => {
+          {Array.from({ length: Math.max(0, SLOTS_COUNT - products.length) }).map((_, idx) => {
             const slotIndex = products.length + idx + 1;
-            const isLocked = USER_PLAN === 'STARTER' && slotIndex > 1;
-            return <EmptySlot key={`slot-${slotIndex}`} isLocked={isLocked} onAction={handleAddProduct} />;
+            const isLocked = subscriptionTier === 'STARTER' && slotIndex > 1;
+            return <EmptySlot key={`slot-${slotIndex}`} isLocked={isLocked} onAction={isLocked ? () => {} : handleAddProduct} />;
           })}
         </div>
       </div>
