@@ -132,6 +132,9 @@ export default function EditProductPage() {
         pain_points_solved: painsFrustrations,
         product_description: valueProposition,
       },
+    }, {
+      onSuccess: () => toast.success('Product saved successfully'),
+      onError: (err: any) => toast.error('Failed to save product', { description: err.message }),
     });
   };
 
