@@ -14,75 +14,690 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_log: {
+        Row: {
+          alerted_via: string | null
+          conversation_id: string | null
+          created_at: string | null
+          error_message: string
+          execution_id: string | null
+          id: number
+          node_name: string
+          severity: string
+          workflow_id: string | null
+        }
+        Insert: {
+          alerted_via?: string | null
+          conversation_id?: string | null
+          created_at?: string | null
+          error_message: string
+          execution_id?: string | null
+          id?: number
+          node_name: string
+          severity: string
+          workflow_id?: string | null
+        }
+        Update: {
+          alerted_via?: string | null
+          conversation_id?: string | null
+          created_at?: string | null
+          error_message?: string
+          execution_id?: string | null
+          id?: number
+          node_name?: string
+          severity?: string
+          workflow_id?: string | null
+        }
+        Relationships: []
+      }
+      bot_activity_log: {
+        Row: {
+          action: string
+          confidence: number | null
+          confidence_score: number | null
+          conversation_id: string
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_question: string | null
+          generated_response: string | null
+          id: number
+          matched_article_id: string | null
+          matched_source: string | null
+        }
+        Insert: {
+          action: string
+          confidence?: number | null
+          confidence_score?: number | null
+          conversation_id: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_question?: string | null
+          generated_response?: string | null
+          id?: number
+          matched_article_id?: string | null
+          matched_source?: string | null
+        }
+        Update: {
+          action?: string
+          confidence?: number | null
+          confidence_score?: number | null
+          conversation_id?: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_question?: string | null
+          generated_response?: string | null
+          id?: number
+          matched_article_id?: string | null
+          matched_source?: string | null
+        }
+        Relationships: []
+      }
+      bot_metrics: {
+        Row: {
+          chat_id: number | null
+          duration_ms: number | null
+          error_message: string | null
+          estimated_cost_usd: number | null
+          execution_id: string | null
+          has_memory: boolean | null
+          id: number
+          input_tokens: number | null
+          message_type: string | null
+          model_used: string | null
+          output_tokens: number | null
+          routed_to: string | null
+          routing_confidence: number | null
+          routing_method: string | null
+          status: string
+          timestamp: string | null
+          tools_used: string[] | null
+          trace_id: string | null
+          user_id: string | null
+          worker_name: string | null
+        }
+        Insert: {
+          chat_id?: number | null
+          duration_ms?: number | null
+          error_message?: string | null
+          estimated_cost_usd?: number | null
+          execution_id?: string | null
+          has_memory?: boolean | null
+          id?: number
+          input_tokens?: number | null
+          message_type?: string | null
+          model_used?: string | null
+          output_tokens?: number | null
+          routed_to?: string | null
+          routing_confidence?: number | null
+          routing_method?: string | null
+          status?: string
+          timestamp?: string | null
+          tools_used?: string[] | null
+          trace_id?: string | null
+          user_id?: string | null
+          worker_name?: string | null
+        }
+        Update: {
+          chat_id?: number | null
+          duration_ms?: number | null
+          error_message?: string | null
+          estimated_cost_usd?: number | null
+          execution_id?: string | null
+          has_memory?: boolean | null
+          id?: number
+          input_tokens?: number | null
+          message_type?: string | null
+          model_used?: string | null
+          output_tokens?: number | null
+          routed_to?: string | null
+          routing_confidence?: number | null
+          routing_method?: string | null
+          status?: string
+          timestamp?: string | null
+          tools_used?: string[] | null
+          trace_id?: string | null
+          user_id?: string | null
+          worker_name?: string | null
+        }
+        Relationships: []
+      }
+      bot_reply_log: {
+        Row: {
+          conversation_id: string
+          created_at: string | null
+          id: string
+          reply_hash: string
+          sent_at: string | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          reply_hash: string
+          sent_at?: string | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          reply_hash?: string
+          sent_at?: string | null
+        }
+        Relationships: []
+      }
+      bot_users: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          id: string
+          is_authorized: boolean | null
+          settings: Json | null
+          telegram_chat_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          is_authorized?: boolean | null
+          settings?: Json | null
+          telegram_chat_id: number
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          is_authorized?: boolean | null
+          settings?: Json | null
+          telegram_chat_id?: number
+        }
+        Relationships: []
+      }
       brain_entries: {
         Row: {
           bot_response: string | null
+          consolidated: boolean | null
           content: string
-          created_at: string | null
+          content_hash: string | null
+          created_at: string
           embedding: string | null
           entry_type: string
           id: string
           metadata: Json | null
+          relevance_score: number | null
           source: string
           title: string | null
+          updated_at: string
+          user_id: string | null
           user_message: string | null
         }
         Insert: {
           bot_response?: string | null
+          consolidated?: boolean | null
           content: string
-          created_at?: string | null
-          embedding?: string | null
-          entry_type: string
-          id?: string
-          metadata?: Json | null
-          source: string
-          title?: string | null
-          user_message?: string | null
-        }
-        Update: {
-          bot_response?: string | null
-          content?: string
-          created_at?: string | null
+          content_hash?: string | null
+          created_at?: string
           embedding?: string | null
           entry_type?: string
           id?: string
           metadata?: Json | null
+          relevance_score?: number | null
           source?: string
           title?: string | null
+          updated_at?: string
+          user_id?: string | null
           user_message?: string | null
+        }
+        Update: {
+          bot_response?: string | null
+          consolidated?: boolean | null
+          content?: string
+          content_hash?: string | null
+          created_at?: string
+          embedding?: string | null
+          entry_type?: string
+          id?: string
+          metadata?: Json | null
+          relevance_score?: number | null
+          source?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          user_message?: string | null
+        }
+        Relationships: []
+      }
+      cache_calendar_events: {
+        Row: {
+          cache_key: string
+          cached_at: string | null
+          events: Json
+          expires_at: string
+          hit_count: number | null
+          last_hit_at: string | null
+          time_max: string
+          time_min: string
+        }
+        Insert: {
+          cache_key: string
+          cached_at?: string | null
+          events: Json
+          expires_at: string
+          hit_count?: number | null
+          last_hit_at?: string | null
+          time_max: string
+          time_min: string
+        }
+        Update: {
+          cache_key?: string
+          cached_at?: string | null
+          events?: Json
+          expires_at?: string
+          hit_count?: number | null
+          last_hit_at?: string | null
+          time_max?: string
+          time_min?: string
+        }
+        Relationships: []
+      }
+      cache_gmail_searches: {
+        Row: {
+          cache_key: string
+          cached_at: string | null
+          expires_at: string
+          hit_count: number | null
+          last_hit_at: string | null
+          query: string
+          results: Json
+        }
+        Insert: {
+          cache_key: string
+          cached_at?: string | null
+          expires_at: string
+          hit_count?: number | null
+          last_hit_at?: string | null
+          query: string
+          results: Json
+        }
+        Update: {
+          cache_key?: string
+          cached_at?: string | null
+          expires_at?: string
+          hit_count?: number | null
+          last_hit_at?: string | null
+          query?: string
+          results?: Json
+        }
+        Relationships: []
+      }
+      cache_jira_issues: {
+        Row: {
+          cache_key: string
+          cached_at: string | null
+          expires_at: string
+          hit_count: number | null
+          jql: string
+          last_hit_at: string | null
+          results: Json
+        }
+        Insert: {
+          cache_key: string
+          cached_at?: string | null
+          expires_at: string
+          hit_count?: number | null
+          jql: string
+          last_hit_at?: string | null
+          results: Json
+        }
+        Update: {
+          cache_key?: string
+          cached_at?: string | null
+          expires_at?: string
+          hit_count?: number | null
+          jql?: string
+          last_hit_at?: string | null
+          results?: Json
+        }
+        Relationships: []
+      }
+      cache_web_searches: {
+        Row: {
+          cache_key: string
+          cached_at: string | null
+          expires_at: string
+          hit_count: number | null
+          last_hit_at: string | null
+          query: string
+          results: Json
+        }
+        Insert: {
+          cache_key: string
+          cached_at?: string | null
+          expires_at: string
+          hit_count?: number | null
+          last_hit_at?: string | null
+          query: string
+          results: Json
+        }
+        Update: {
+          cache_key?: string
+          cached_at?: string | null
+          expires_at?: string
+          hit_count?: number | null
+          last_hit_at?: string | null
+          query?: string
+          results?: Json
+        }
+        Relationships: []
+      }
+      circuit_breaker_state: {
+        Row: {
+          api_name: string
+          created_at: string | null
+          failure_count: number | null
+          id: string
+          last_failure_at: string | null
+          last_success_at: string | null
+          opened_at: string | null
+          state: string
+          success_count: number | null
+          updated_at: string | null
+          window_start: string | null
+          worker_name: string | null
+        }
+        Insert: {
+          api_name: string
+          created_at?: string | null
+          failure_count?: number | null
+          id?: string
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          opened_at?: string | null
+          state: string
+          success_count?: number | null
+          updated_at?: string | null
+          window_start?: string | null
+          worker_name?: string | null
+        }
+        Update: {
+          api_name?: string
+          created_at?: string | null
+          failure_count?: number | null
+          id?: string
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          opened_at?: string | null
+          state?: string
+          success_count?: number | null
+          updated_at?: string | null
+          window_start?: string | null
+          worker_name?: string | null
+        }
+        Relationships: []
+      }
+      conversation_followup_state: {
+        Row: {
+          auto_closed_at: string | null
+          conversation_id: string
+          created_at: string | null
+          customer_email: string | null
+          followup_sent_at: string | null
+          id: number
+          initial_reply_sent_at: string | null
+          last_customer_response_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_closed_at?: string | null
+          conversation_id: string
+          created_at?: string | null
+          customer_email?: string | null
+          followup_sent_at?: string | null
+          id?: number
+          initial_reply_sent_at?: string | null
+          last_customer_response_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_closed_at?: string | null
+          conversation_id?: string
+          created_at?: string | null
+          customer_email?: string | null
+          followup_sent_at?: string | null
+          id?: number
+          initial_reply_sent_at?: string | null
+          last_customer_response_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      crawler_locks: {
+        Row: {
+          id: string
+          locked_at: string | null
+          locked_until: string
+        }
+        Insert: {
+          id: string
+          locked_at?: string | null
+          locked_until: string
+        }
+        Update: {
+          id?: string
+          locked_at?: string | null
+          locked_until?: string
+        }
+        Relationships: []
+      }
+      crawler_runs: {
+        Row: {
+          batches_processed: number | null
+          completed_at: string | null
+          duration_seconds: number | null
+          id: string
+          leads_inserted: number | null
+          leads_skipped: number | null
+          notes: string | null
+          products_processed: number | null
+          started_at: string
+          status: string | null
+          top_score: number | null
+          trigger_mode: string | null
+        }
+        Insert: {
+          batches_processed?: number | null
+          completed_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          leads_inserted?: number | null
+          leads_skipped?: number | null
+          notes?: string | null
+          products_processed?: number | null
+          started_at?: string
+          status?: string | null
+          top_score?: number | null
+          trigger_mode?: string | null
+        }
+        Update: {
+          batches_processed?: number | null
+          completed_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          leads_inserted?: number | null
+          leads_skipped?: number | null
+          notes?: string | null
+          products_processed?: number | null
+          started_at?: string
+          status?: string | null
+          top_score?: number | null
+          trigger_mode?: string | null
+        }
+        Relationships: []
+      }
+      daily_digest_log: {
+        Row: {
+          created_at: string | null
+          email_sent_at: string | null
+          id: number
+          period_end: string
+          period_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_sent_at?: string | null
+          id?: number
+          period_end: string
+          period_start: string
+        }
+        Update: {
+          created_at?: string | null
+          email_sent_at?: string | null
+          id?: number
+          period_end?: string
+          period_start?: string
+        }
+        Relationships: []
+      }
+      failed_bot_actions: {
+        Row: {
+          conversation_id: string
+          created_at: string | null
+          customer_email: string | null
+          customer_question: string | null
+          error_details: Json | null
+          error_message: string | null
+          error_stack: string | null
+          execution_id: string | null
+          failed_at: string | null
+          failed_node: string
+          failure_reason: string | null
+          id: string
+          last_retry_at: string | null
+          node_name: string | null
+          resolution_notes: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          retry_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_question?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          error_stack?: string | null
+          execution_id?: string | null
+          failed_at?: string | null
+          failed_node: string
+          failure_reason?: string | null
+          id?: string
+          last_retry_at?: string | null
+          node_name?: string | null
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          retry_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_question?: string | null
+          error_details?: Json | null
+          error_message?: string | null
+          error_stack?: string | null
+          execution_id?: string | null
+          failed_at?: string | null
+          failed_node?: string
+          failure_reason?: string | null
+          id?: string
+          last_retry_at?: string | null
+          node_name?: string | null
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          retry_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      failedbotactions: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          error_message: string | null
+          error_stack: string | null
+          execution_id: string | null
+          id: number
+          node_name: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          error_stack?: string | null
+          execution_id?: string | null
+          id?: number
+          node_name?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          error_stack?: string | null
+          execution_id?: string | null
+          id?: number
+          node_name?: string | null
         }
         Relationships: []
       }
       keyword_performance: {
         Row: {
           conversion_rate: number
+          created_at: string | null
           id: string
           impressions: number
           keyword: string
+          keyword_tier: string | null
           last_success_at: string | null
           leads_found: number
           product_id: string | null
           status: string
+          updated_at: string | null
         }
         Insert: {
           conversion_rate?: number
+          created_at?: string | null
           id?: string
           impressions?: number
           keyword: string
+          keyword_tier?: string | null
           last_success_at?: string | null
           leads_found?: number
           product_id?: string | null
           status?: string
+          updated_at?: string | null
         }
         Update: {
           conversion_rate?: number
+          created_at?: string | null
           id?: string
           impressions?: number
           keyword?: string
+          keyword_tier?: string | null
           last_success_at?: string | null
           leads_found?: number
           product_id?: string | null
           status?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -96,48 +711,29 @@ export type Database = {
       }
       lead_feedback: {
         Row: {
-          created_at: string | null
-          feedback_category: string | null
-          feedback_text: string | null
           id: string
           lead_id: string
-          product_id: string
-          rating: number
-          user_id: string
+          recorded_at: string | null
+          verdict: string
         }
         Insert: {
-          created_at?: string | null
-          feedback_category?: string | null
-          feedback_text?: string | null
           id?: string
           lead_id: string
-          product_id: string
-          rating: number
-          user_id: string
+          recorded_at?: string | null
+          verdict: string
         }
         Update: {
-          created_at?: string | null
-          feedback_category?: string | null
-          feedback_text?: string | null
           id?: string
           lead_id?: string
-          product_id?: string
-          rating?: number
-          user_id?: string
+          recorded_at?: string | null
+          verdict?: string
         }
         Relationships: [
           {
             foreignKeyName: "lead_feedback_lead_id_fkey"
             columns: ["lead_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_feedback_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -145,6 +741,7 @@ export type Database = {
       leads: {
         Row: {
           author: string
+          buying_signal: string | null
           buying_stage_detail: string | null
           competitive_context_detail: string | null
           competitors_mentioned: string | null
@@ -152,10 +749,14 @@ export type Database = {
           created_utc: string | null
           id: string
           intent_score: number
+          intent_type: string | null
           is_problem_focused: boolean | null
           is_solution_seeking: boolean | null
           objection_barrier: string | null
+          pipeline_version: number | null
+          post_age_hours: number | null
           post_content: string
+          post_created_utc: number | null
           post_title: string
           post_url: string
           problem_statement_detail: string | null
@@ -163,9 +764,11 @@ export type Database = {
           relevance_summary: string | null
           sentiment: string | null
           source_subreddit: string
+          stage: string | null
           status: string
           suggested_reply_hook: string | null
           updated_at: string | null
+          urgency_signal: string | null
           urgency_signals_detail: string | null
           user_feedback: string | null
           user_goal: string | null
@@ -173,6 +776,7 @@ export type Database = {
         }
         Insert: {
           author: string
+          buying_signal?: string | null
           buying_stage_detail?: string | null
           competitive_context_detail?: string | null
           competitors_mentioned?: string | null
@@ -180,10 +784,14 @@ export type Database = {
           created_utc?: string | null
           id?: string
           intent_score: number
+          intent_type?: string | null
           is_problem_focused?: boolean | null
           is_solution_seeking?: boolean | null
           objection_barrier?: string | null
+          pipeline_version?: number | null
+          post_age_hours?: number | null
           post_content: string
+          post_created_utc?: number | null
           post_title: string
           post_url: string
           problem_statement_detail?: string | null
@@ -191,9 +799,11 @@ export type Database = {
           relevance_summary?: string | null
           sentiment?: string | null
           source_subreddit: string
+          stage?: string | null
           status?: string
           suggested_reply_hook?: string | null
           updated_at?: string | null
+          urgency_signal?: string | null
           urgency_signals_detail?: string | null
           user_feedback?: string | null
           user_goal?: string | null
@@ -201,6 +811,7 @@ export type Database = {
         }
         Update: {
           author?: string
+          buying_signal?: string | null
           buying_stage_detail?: string | null
           competitive_context_detail?: string | null
           competitors_mentioned?: string | null
@@ -208,10 +819,14 @@ export type Database = {
           created_utc?: string | null
           id?: string
           intent_score?: number
+          intent_type?: string | null
           is_problem_focused?: boolean | null
           is_solution_seeking?: boolean | null
           objection_barrier?: string | null
+          pipeline_version?: number | null
+          post_age_hours?: number | null
           post_content?: string
+          post_created_utc?: number | null
           post_title?: string
           post_url?: string
           problem_statement_detail?: string | null
@@ -219,9 +834,11 @@ export type Database = {
           relevance_summary?: string | null
           sentiment?: string | null
           source_subreddit?: string
+          stage?: string | null
           status?: string
           suggested_reply_hook?: string | null
           updated_at?: string | null
+          urgency_signal?: string | null
           urgency_signals_detail?: string | null
           user_feedback?: string | null
           user_goal?: string | null
@@ -236,6 +853,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      processed_messages: {
+        Row: {
+          chat_id: number
+          id: number
+          message_id: number
+          processed_at: string | null
+        }
+        Insert: {
+          chat_id: number
+          id?: number
+          message_id: number
+          processed_at?: string | null
+        }
+        Update: {
+          chat_id?: number
+          id?: number
+          message_id?: number
+          processed_at?: string | null
+        }
+        Relationships: []
       }
       product_execution_logs: {
         Row: {
@@ -462,11 +1100,37 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          call_count: number
+          created_at: string | null
+          function_name: string
+          id: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          call_count?: number
+          created_at?: string | null
+          function_name: string
+          id?: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          call_count?: number
+          created_at?: string | null
+          function_name?: string
+          id?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       rejection_patterns: {
         Row: {
           confidence: number | null
           created_at: string | null
-          embedding: string | null
           id: string
           post_content: string
           post_title: string | null
@@ -481,7 +1145,6 @@ export type Database = {
         Insert: {
           confidence?: number | null
           created_at?: string | null
-          embedding?: string | null
           id?: string
           post_content: string
           post_title?: string | null
@@ -496,7 +1159,6 @@ export type Database = {
         Update: {
           confidence?: number | null
           created_at?: string | null
-          embedding?: string | null
           id?: string
           post_content?: string
           post_title?: string | null
@@ -518,6 +1180,69 @@ export type Database = {
           },
         ]
       }
+      resolved_conversations: {
+        Row: {
+          answer: string
+          category: string | null
+          conversation_id: string
+          embedding: string | null
+          id: number
+          learned_at: string | null
+          question: string
+        }
+        Insert: {
+          answer: string
+          category?: string | null
+          conversation_id: string
+          embedding?: string | null
+          id?: number
+          learned_at?: string | null
+          question: string
+        }
+        Update: {
+          answer?: string
+          category?: string | null
+          conversation_id?: string
+          embedding?: string | null
+          id?: number
+          learned_at?: string | null
+          question?: string
+        }
+        Relationships: []
+      }
+      sanad_conversations: {
+        Row: {
+          auto_closed_at: string | null
+          conversation_id: string
+          created_at: string | null
+          followup_sent_at: string | null
+          initial_reply_sent_at: string | null
+          status: string
+          updated_at: string | null
+          user_email: string | null
+        }
+        Insert: {
+          auto_closed_at?: string | null
+          conversation_id: string
+          created_at?: string | null
+          followup_sent_at?: string | null
+          initial_reply_sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_email?: string | null
+        }
+        Update: {
+          auto_closed_at?: string | null
+          conversation_id?: string
+          created_at?: string | null
+          followup_sent_at?: string | null
+          initial_reply_sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_email?: string | null
+        }
+        Relationships: []
+      }
       subreddits: {
         Row: {
           avg_daily_comments: number | null
@@ -528,7 +1253,6 @@ export type Database = {
           content_sample: string | null
           content_sample_updated_utc: string | null
           description: string | null
-          embedding: unknown
           engagement_ratio: number | null
           id: number
           last_active_utc: string | null
@@ -545,7 +1269,6 @@ export type Database = {
           content_sample?: string | null
           content_sample_updated_utc?: string | null
           description?: string | null
-          embedding?: unknown
           engagement_ratio?: number | null
           id?: never
           last_active_utc?: string | null
@@ -562,12 +1285,44 @@ export type Database = {
           content_sample?: string | null
           content_sample_updated_utc?: string | null
           description?: string | null
-          embedding?: unknown
           engagement_ratio?: number | null
           id?: never
           last_active_utc?: string | null
           name?: string
           subscribers?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      support_articles: {
+        Row: {
+          answer: string
+          category: string | null
+          created_at: string | null
+          embedding: string | null
+          id: number
+          question: string
+          times_used: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          answer: string
+          category?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          id?: number
+          question: string
+          times_used?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          answer?: string
+          category?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          id?: number
+          question?: string
+          times_used?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -603,6 +1358,170 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      telegram_error_log: {
+        Row: {
+          chat_id: string
+          created_at: string
+          error: string | null
+          id: number
+          message: string
+          retry_count: number | null
+          workflow_id: string | null
+          workflow_name: string | null
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          error?: string | null
+          id?: number
+          message: string
+          retry_count?: number | null
+          workflow_id?: string | null
+          workflow_name?: string | null
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          error?: string | null
+          id?: number
+          message?: string
+          retry_count?: number | null
+          workflow_id?: string | null
+          workflow_name?: string | null
+        }
+        Relationships: []
+      }
+      telegram_health_log: {
+        Row: {
+          checked_at: string
+          error_message: string | null
+          id: number
+          response_time_ms: number | null
+          status: string
+        }
+        Insert: {
+          checked_at?: string
+          error_message?: string | null
+          id?: number
+          response_time_ms?: number | null
+          status: string
+        }
+        Update: {
+          checked_at?: string
+          error_message?: string | null
+          id?: number
+          response_time_ms?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
+      test_results: {
+        Row: {
+          assertions: Json | null
+          completed_at: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          started_at: string | null
+          status: string
+          test_id: string
+          test_run_id: string | null
+        }
+        Insert: {
+          assertions?: Json | null
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          started_at?: string | null
+          status: string
+          test_id: string
+          test_run_id?: string | null
+        }
+        Update: {
+          assertions?: Json | null
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          started_at?: string | null
+          status?: string
+          test_id?: string
+          test_run_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_results_test_run_id_fkey"
+            columns: ["test_run_id"]
+            isOneToOne: false
+            referencedRelation: "test_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_runs: {
+        Row: {
+          completed_at: string | null
+          failed_tests: number | null
+          id: string
+          metadata: Json | null
+          passed_tests: number | null
+          report: string | null
+          session_id: string
+          started_at: string | null
+          status: string
+          total_tests: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          failed_tests?: number | null
+          id?: string
+          metadata?: Json | null
+          passed_tests?: number | null
+          report?: string | null
+          session_id: string
+          started_at?: string | null
+          status?: string
+          total_tests?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          failed_tests?: number | null
+          id?: string
+          metadata?: Json | null
+          passed_tests?: number | null
+          report?: string | null
+          session_id?: string
+          started_at?: string | null
+          status?: string
+          total_tests?: number | null
+        }
+        Relationships: []
+      }
+      user_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       users: {
         Row: {
@@ -720,39 +1639,83 @@ export type Database = {
       }
     }
     Views: {
-      threaddits_metrics_cached: {
+      cache_statistics: {
+        Row: {
+          active_entries: number | null
+          age_seconds: number | null
+          avg_hits_per_entry: number | null
+          expired_entries: number | null
+          newest_entry: string | null
+          oldest_entry: string | null
+          service: string | null
+          total_entries: number | null
+          total_hits: number | null
+        }
+        Relationships: []
+      }
+      threaddits_advanced_metrics: {
         Row: {
           avg_discovery_saturation: number | null
           avg_time_to_first_lead_mins: number | null
-          cached_at: string | null
-          data_amnesia_rate: number | null
-          failed_runs_7d: number | null
-          freemium_unlock_rate: number | null
           global_cprl: number | null
           global_signal_to_noise_ratio: number | null
-          last_run_at: string | null
-          leads_last_24h: number | null
-          leads_last_7d: number | null
-          stale_portfolio_rate: number | null
-          successful_runs_7d: number | null
-          total_high_intent_leads: number | null
-          total_leads: number | null
-          total_products: number | null
-          total_qualified_leads: number | null
-          total_subreddits_tracked: number | null
-          user_feedback_rejection_rate: number | null
-          workflow_success_status: string | null
-          zero_result_rate: number | null
         }
         Relationships: []
       }
     }
     Functions: {
+      cleanup_all_caches: {
+        Args: never
+        Returns: {
+          deleted_count: number
+          remaining_count: number
+          service: string
+        }[]
+      }
+      cleanup_calendar_cache: {
+        Args: never
+        Returns: {
+          deleted_count: number
+        }[]
+      }
+      cleanup_gmail_cache: {
+        Args: never
+        Returns: {
+          deleted_count: number
+        }[]
+      }
+      cleanup_jira_cache: {
+        Args: never
+        Returns: {
+          deleted_count: number
+        }[]
+      }
+      cleanup_processed_messages: { Args: never; Returns: undefined }
+      cleanup_rate_limits: { Args: never; Returns: undefined }
+      cleanup_sanad_processed_messages: { Args: never; Returns: undefined }
+      cleanup_web_cache: {
+        Args: never
+        Returns: {
+          deleted_count: number
+        }[]
+      }
       current_auth_uid: { Args: never; Returns: string }
-      generate_optimal_keywords: {
-        Args: { p_product_id: string }
+      fn_record_lead_feedback: {
+        Args: { p_lead_id: string; p_verdict: string }
         Returns: Json
       }
+      fn_update_calibration_from_feedback: {
+        Args: { p_lead_id: string }
+        Returns: Json
+      }
+      generate_optimal_keywords: {
+        Args: { p_product_id: string }
+        Returns: {
+          keyword: string
+          tier: string
+        }[]
+      }
+      get_calendar_cache: { Args: { p_cache_key: string }; Returns: Json }
       get_existing_post_urls: {
         Args: {
           p_searched_keyword: string
@@ -763,6 +1726,8 @@ export type Database = {
           post_url: string
         }[]
       }
+      get_gmail_cache: { Args: { p_cache_key: string }; Returns: Json }
+      get_jira_cache: { Args: { p_cache_key: string }; Returns: Json }
       get_optimal_subreddits_by_category: {
         Args: {
           p_business_type: string
@@ -771,98 +1736,88 @@ export type Database = {
         }
         Returns: string[]
       }
-      get_subreddit_stats: {
-        Args: { query_embedding: string }
-        Returns: {
-          avg_commercial_score: number
-          avg_similarity: number
-          tier_1_count: number
-          tier_2_count: number
-          tier_3_count: number
-          total_matching: number
-        }[]
-      }
+      get_web_cache: { Args: { p_cache_key: string }; Returns: Json }
       get_weekly_high_intent_leads_count: {
         Args: { p_product_id: string; p_user_id: string }
         Returns: number
       }
+      invalidate_calendar_cache: { Args: never; Returns: number }
+      invalidate_gmail_cache: { Args: never; Returns: number }
+      invalidate_jira_cache: { Args: never; Returns: number }
       is_product_owner: { Args: { prod_uuid: string }; Returns: boolean }
-      match_brain_entries: {
+      match_brain_entries_v2: {
         Args: {
-          filter_source?: string
-          filter_type?: string
+          filter_user_id?: string
           match_count?: number
           match_threshold?: number
           query_embedding: string
         }
         Returns: {
-          bot_response: string
           content: string
-          created_at: string
           entry_type: string
           id: string
-          metadata: Json
+          similarity: number
+        }[]
+      }
+      match_support_knowledge: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          answer: string
+          category: string
+          id: string
+          question: string
           similarity: number
           source: string
-          title: string
-          user_message: string
         }[]
       }
-      match_rejection_patterns: {
-        Args: {
-          match_count: number
-          match_threshold: number
-          query_embedding: string
-          target_product_id: string
-        }
-        Returns: {
-          id: string
-          post_content: string
-          rejection_reason: Database["public"]["Enums"]["rejection_reason"]
-          similarity: number
-        }[]
+      record_subreddit_rejection: {
+        Args: { p_product_id: string; p_subreddit: string }
+        Returns: undefined
       }
-      match_subreddits_commercial: {
+      set_calendar_cache: {
         Args: {
-          is_b2b: boolean
-          match_count: number
-          match_threshold: number
-          min_commercial_score: number
-          query_embedding: string
+          p_cache_key: string
+          p_events: Json
+          p_time_max: string
+          p_time_min: string
+          p_ttl_minutes?: number
         }
-        Returns: {
-          avg_daily_comments: number
-          avg_daily_posts: number
-          commercial_score: number
-          community_type: string
-          description: string
-          id: number
-          last_active_utc: string
-          name: string
-          similarity: number
-          subscribers: number
-        }[]
+        Returns: undefined
       }
-      match_subreddits_sprint: {
+      set_gmail_cache: {
         Args: {
-          match_count: number
-          match_threshold: number
-          min_commercial_score: number
-          query_embedding: string
+          p_cache_key: string
+          p_query: string
+          p_results: Json
+          p_ttl_minutes?: number
         }
-        Returns: {
-          avg_daily_comments: number
-          avg_daily_posts: number
-          commercial_score: number
-          community_type: string
-          description: string
-          id: number
-          last_active_utc: string
-          match_tier: string
-          name: string
-          similarity: number
-          subscribers: number
-        }[]
+        Returns: undefined
+      }
+      set_jira_cache: {
+        Args: {
+          p_cache_key: string
+          p_jql: string
+          p_results: Json
+          p_ttl_minutes?: number
+        }
+        Returns: undefined
+      }
+      set_web_cache: {
+        Args: {
+          p_cache_key: string
+          p_query: string
+          p_results: Json
+          p_ttl_minutes?: number
+        }
+        Returns: undefined
+      }
+      update_circuit_breaker: {
+        Args: { p_api_name: string; p_success: boolean }
+        Returns: undefined
       }
       update_subreddit_performance: {
         Args: { target_product_id: string }

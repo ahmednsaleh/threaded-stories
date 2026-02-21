@@ -60,7 +60,7 @@ export function useLeads({ productId, statusFilter = 'Show All', timeFilter = 'A
 
       let query = supabase
         .from('leads')
-        .select('id, post_url, post_title, post_content, author, source_subreddit, intent_score, buying_stage_detail, urgency_signals_detail, relevance_summary, problem_statement_detail, competitors_mentioned, sentiment, status, user_feedback, created_utc, product_id')
+        .select('id, post_url, post_title, post_content, author, source_subreddit, intent_score, buying_stage_detail, urgency_signals_detail, relevance_summary, problem_statement_detail, competitors_mentioned, competitive_context_detail, sentiment, status, user_feedback, created_utc, product_id, is_solution_seeking, is_problem_focused')
         .eq('user_id', user.id)
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
