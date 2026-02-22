@@ -48,8 +48,10 @@ export default function SettingsPage() {
   }, [user]);
 
   const isPro = subscriptionTier === 'pro';
+  const isStarter = subscriptionTier === 'starter';
+  const isFree = !isPro && !isStarter;
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (plan: 'starter' | 'pro' = 'starter') => {
     if (!session?.access_token) {
       toast.error('Please sign in first');
       return;
@@ -57,7 +59,7 @@ export default function SettingsPage() {
     setCheckoutLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-stripe-checkout-session', {
-        body: {},
+        body: { plan },
       });
 
       if (error) throw error;
@@ -172,7 +174,7 @@ export default function SettingsPage() {
                       <Zap className="w-6 h-6 text-emerald-400 fill-emerald-400" />
                       <span className="font-bold text-lg tracking-tight">Pro Plan Active</span>
                     </div>
-                    <p className="text-slate-300 text-sm leading-relaxed mb-6">You have access to all features including multi-product tracking.</p>
+                    <p className="text-slate-300 text-sm leading-relaxed mb-6">You have access to all features including 3-product tracking.</p>
                     <Button
                       onClick={handleManageBilling}
                       disabled={portalLoading}
@@ -181,19 +183,49 @@ export default function SettingsPage() {
                       {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Manage Billing"}
                     </Button>
                   </>
+                ) : isStarter ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Zap className="w-6 h-6 text-[#C2410C] fill-[#C2410C]" />
+                      <span className="font-bold text-lg tracking-tight">Starter Plan Active</span>
+                    </div>
+                    <p className="text-slate-300 text-sm leading-relaxed mb-4">Upgrade to Pro to track up to 3 products simultaneously.</p>
+                    <Button
+                      onClick={() => handleUpgrade('pro')}
+                      disabled={checkoutLoading}
+                      className="w-full bg-[#C2410C] text-white font-bold h-11 shadow-lg shadow-[#C2410C]/20 transition-all mb-3"
+                    >
+                      {checkoutLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upgrade to Pro — $49/mo"}
+                    </Button>
+                    <Button
+                      onClick={handleManageBilling}
+                      disabled={portalLoading}
+                      variant="ghost"
+                      className="w-full text-slate-300 hover:text-white hover:bg-white/10 h-9 text-sm font-medium transition-all"
+                    >
+                      {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Manage Billing"}
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <div className="flex items-center gap-3 mb-4">
                       <Zap className="w-6 h-6 text-[#C2410C] fill-[#C2410C]" />
-                      <span className="font-bold text-lg tracking-tight">Unlock Multi-Product</span>
+                      <span className="font-bold text-lg tracking-tight">Start Hunting</span>
                     </div>
-                    <p className="text-slate-300 text-sm leading-relaxed mb-6">Upgrade to manage up to 3 separate products and track competitors simultaneously.</p>
+                    <p className="text-slate-300 text-sm leading-relaxed mb-4">Subscribe to unlock all your leads and get hourly fresh scans.</p>
                     <Button
-                      onClick={handleUpgrade}
+                      onClick={() => handleUpgrade('starter')}
+                      disabled={checkoutLoading}
+                      className="w-full bg-white text-[#2C3E50] font-bold h-11 hover:bg-slate-100 transition-all mb-3"
+                    >
+                      {checkoutLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Starter — $29/mo · 1 product"}
+                    </Button>
+                    <Button
+                      onClick={() => handleUpgrade('pro')}
                       disabled={checkoutLoading}
                       className="w-full bg-[#C2410C] text-white font-bold h-11 shadow-lg shadow-[#C2410C]/20 transition-all"
                     >
-                      {checkoutLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upgrade - $49/mo"}
+                      {checkoutLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Pro — $49/mo · 3 products"}
                     </Button>
                   </>
                 )}

@@ -1,36 +1,36 @@
 import * as React from 'react';
+import { useState } from 'react';
 import { Button } from './ui/button';
-import { Check, Zap } from 'lucide-react';
+import { Check, Zap, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../integrations/supabase/client';
+import { toast } from 'sonner';
 
-interface FeatureItem {
-  text?: string;
-  highlight?: string;
-  suffix?: string;
-}
-
-const PricingCard = ({ 
-  title, 
-  price, 
-  description, 
-  features, 
+const PricingCard = ({
+  title,
+  price,
+  description,
+  features,
   isPopular = false,
   buttonText = "Get Started",
-  onAction 
-}: { 
-  title: string, 
-  price: string, 
-  description: string, 
-  features: FeatureItem[], 
+  loading = false,
+  onAction
+}: {
+  title: string,
+  price: string,
+  description: string,
+  features: string[],
   isPopular?: boolean,
   buttonText?: string,
+  loading?: boolean,
   onAction: () => void
 }) => (
   <div className={cn(
     "relative flex flex-col p-8 rounded-2xl transition-all duration-300 h-full",
-    isPopular 
-      ? "bg-white border-2 border-[#C2410C] shadow-2xl shadow-[#C2410C]/10 z-10 scale-105 md:scale-105" 
+    isPopular
+      ? "bg-white border-2 border-[#C2410C] shadow-2xl shadow-[#C2410C]/10 z-10 scale-105 md:scale-105"
       : "bg-white border border-slate-200 shadow-sm hover:border-slate-300"
   )}>
     {isPopular && (
@@ -38,7 +38,7 @@ const PricingCard = ({
         <Zap className="w-3 h-3 fill-current" /> Most Popular
       </div>
     )}
-    
+
     <div className="mb-8">
       <h3 className="text-lg font-bold text-[#2C3E50] mb-2">{title}</h3>
       <p className="text-sm text-slate-500 min-h-[40px] leading-relaxed">
@@ -57,35 +57,57 @@ const PricingCard = ({
       {features.map((feature, i) => (
         <li key={i} className="flex items-start gap-3 text-sm font-medium text-slate-700 font-sans">
           <Check className={cn(
-            "w-5 h-5 flex-shrink-0",
+            "w-5 h-5 flex-shrink-0 mt-0.5",
             isPopular ? "text-[#C2410C]" : "text-slate-400"
           )} />
-          <span>
-            {feature.highlight && (
-              <span className="font-bold text-[#2C3E50]">{feature.highlight}</span>
-            )}
-            {feature.suffix || feature.text}
-          </span>
+          <span>{feature}</span>
         </li>
       ))}
     </ul>
 
-    <Button 
+    <Button
       onClick={onAction}
+      disabled={loading}
       className={cn(
         "w-full rounded-full h-12 font-bold text-base transition-all duration-200",
-        isPopular 
-          ? "bg-[#C2410C] hover:bg-[#A3360A] text-white shadow-lg shadow-[#C2410C]/20 hover:shadow-xl hover:-translate-y-0.5" 
+        isPopular
+          ? "bg-[#C2410C] hover:bg-[#A3360A] text-white shadow-lg shadow-[#C2410C]/20 hover:shadow-xl hover:-translate-y-0.5"
           : "bg-white border-2 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
       )}
     >
-      {buttonText}
+      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : buttonText}
     </Button>
   </div>
 );
 
 export const PricingSection = () => {
   const navigate = useNavigate();
+  const { user, session } = useAuth();
+  const [loadingPlan, setLoadingPlan] = useState<'starter' | 'pro' | null>(null);
+
+  const handleCheckout = async (plan: 'starter' | 'pro') => {
+    if (!user || !session?.access_token) {
+      // Not logged in — send to auth with plan hint
+      navigate(`/auth?plan=${plan}`);
+      return;
+    }
+
+    setLoadingPlan(plan);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout-session', {
+        body: { plan },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      toast.error('Failed to start checkout', { description: err.message });
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <section id="pricing" className="py-24 bg-white border-y border-slate-200">
@@ -101,40 +123,42 @@ export const PricingSection = () => {
              Two simple plans. Cancel anytime.
            </p>
          </div>
-         
+
          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-center">
-            {/* Tier 1: Starter Hunter (Most Popular) */}
-            <PricingCard 
-              title="Starter Hunter" 
-              price="$29" 
+            {/* Starter — $29/mo */}
+            <PricingCard
+              title="Starter"
+              price="$29"
               isPopular={true}
               description="Perfect for bootstrappers and solo founders validating an idea."
               features={[
-                { text: "1 Active Product Slot" }, 
-                { text: "Unlimited Lead Scanning" }, 
-                { text: "Hourly AI Scans (Real-time)" }, 
-                { highlight: "Self-Healing AI", suffix: ": Auto-learns from feedback" }, 
-                { text: "Manual Reply Links" }
+                "1 Active Product Slot",
+                "Unlimited Lead Scanning",
+                "Hourly AI Scans (Real-time)",
+                "Self-Healing AI — auto-learns from feedback",
+                "Manual Reply Links",
               ]}
               buttonText="Start Hunting"
-              onAction={() => navigate('/auth')}
+              loading={loadingPlan === 'starter'}
+              onAction={() => handleCheckout('starter')}
             />
-            
-            {/* Tier 2: Pro Hunter */}
-            <PricingCard 
-              title="Pro Hunter" 
-              price="$49" 
+
+            {/* Pro — $49/mo */}
+            <PricingCard
+              title="Pro"
+              price="$49"
               isPopular={false}
-              description="For serious builders and agencies ready to scale their outreach."
+              description="For serious builders and agencies tracking multiple products."
               features={[
-                { text: "Everything in Starter, plus:" },
-                { text: "3 Active Product Slots" }, 
-                { text: "Real-time Alerts & Slack Integration" },
-                { text: "Advanced Matching Logic" },
-                { text: "Priority Support" }
+                "Everything in Starter, plus:",
+                "3 Active Product Slots",
+                "Track All Competitors Simultaneously",
+                "Advanced Matching Logic",
+                "Priority Support",
               ]}
               buttonText="Upgrade to Pro"
-              onAction={() => navigate('/auth')}
+              loading={loadingPlan === 'pro'}
+              onAction={() => handleCheckout('pro')}
             />
          </div>
       </div>

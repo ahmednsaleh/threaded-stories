@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useMemo, useEffect } from 'react';
-import { 
+import {
   Plus,
   Search,
   ChevronDown,
@@ -10,7 +10,9 @@ import {
   Clock,
   Check,
   Filter,
-  ScanLine
+  ScanLine,
+  Lock,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { LeadCard } from '../components/LeadCard';
@@ -20,6 +22,10 @@ import { useProducts } from '../hooks/useProducts';
 import { useLeads, TimeFilter, StatusFilter } from '../hooks/useLeads';
 import { useLeadMetrics } from '../hooks/useLeadMetrics';
 import { formatTimeAgo } from '../lib/formatTimeAgo';
+import { useUserProfile } from '../hooks/useUserProfile';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../integrations/supabase/client';
+import { toast } from 'sonner';
 
 type LeadFilter = 'all' | 'new' | 'warm' | 'hot';
 
@@ -42,14 +48,19 @@ const LeadCardSkeleton = () => (
   </div>
 );
 
+const FREE_LEAD_LIMIT = 10;
+
 export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean }) {
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const { data: userProfile } = useUserProfile();
   const [activeFilter, setActiveFilter] = useState<LeadFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('All Time');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('Show All');
   const [isTimeMenuOpen, setIsTimeMenuOpen] = useState(false);
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<'starter' | 'pro' | null>(null);
 
   // Product Switcher State
   const [activeProductId, setActiveProductId] = useState<string | null>(null);
@@ -89,6 +100,31 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
   }, [leads, activeFilter]);
 
   const isLoading = isLoadingProducts || isLoadingLeads;
+
+  // Paywall: free-tier users see only the first FREE_LEAD_LIMIT leads
+  const subscriptionTier = userProfile?.subscription_tier || 'free';
+  const isPaidUser = subscriptionTier === 'starter' || subscriptionTier === 'pro';
+  const visibleLeads = isPaidUser ? filteredLeads : filteredLeads.slice(0, FREE_LEAD_LIMIT);
+  const lockedLeadCount = isPaidUser ? 0 : Math.max(0, filteredLeads.length - FREE_LEAD_LIMIT);
+
+  const handleCheckout = async (plan: 'starter' | 'pro') => {
+    if (!session?.access_token) {
+      navigate(`/auth?plan=${plan}`);
+      return;
+    }
+    setCheckoutLoading(plan);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout-session', {
+        body: { plan },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      toast.error('Failed to start checkout', { description: err.message });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
 
   return (
     <main className={cn(
@@ -255,37 +291,80 @@ export default function LeadsPage({ isShowcase = false }: { isShowcase?: boolean
               <LeadCardSkeleton />
               <LeadCardSkeleton />
             </>
-          ) : filteredLeads.length > 0 ? (
-            filteredLeads.slice(0, isShowcase ? 2 : undefined).map((lead, index) => (
-              <LeadCard 
-                key={lead.id}
-                id={lead.id}
-                intent_score={lead.intent_score}
-                source_subreddit={lead.source_subreddit}
-                username={lead.author}
-                time_ago={formatTimeAgo(lead.created_utc)}
-                post_title={lead.post_title}
-                post_content={lead.post_content}
-                post_url={lead.post_url}
-                relevance_summary={lead.relevance_summary || 'No summary available'}
-                problem_statement_detail={lead.problem_statement_detail || 'Not specified'}
-                urgency_signals_detail={lead.urgency_signals_detail || 'Not specified'}
-                competitors_mentioned={lead.competitive_context_detail || lead.competitors_mentioned || 'None'}
-                buying_stage={lead.buying_stage_detail || (lead.is_solution_seeking ? 'Solution Seeking' : 'Researching')}
-                sentiment={
-                  lead.urgency_signals_detail?.toLowerCase().includes('high') || lead.urgency_signals_detail?.toLowerCase().includes('immediate')
-                    ? 'High Urgency'
-                    : lead.urgency_signals_detail?.toLowerCase().includes('medium')
-                      ? 'Medium Urgency'
-                      : 'Low Urgency'
-                }
-                status={lead.status}
-                product_name={activeProduct?.product_name || 'Product'}
-                product_id={activeProductId || undefined}
-                initiallyExpanded={index === 0}
-                noAnimation={isShowcase}
-              />
-            ))
+          ) : visibleLeads.length > 0 || lockedLeadCount > 0 ? (
+            <>
+              {visibleLeads.slice(0, isShowcase ? 2 : undefined).map((lead, index) => (
+                <LeadCard
+                  key={lead.id}
+                  id={lead.id}
+                  intent_score={lead.intent_score}
+                  source_subreddit={lead.source_subreddit}
+                  username={lead.author}
+                  time_ago={formatTimeAgo(lead.created_utc)}
+                  post_title={lead.post_title}
+                  post_content={lead.post_content}
+                  post_url={lead.post_url}
+                  relevance_summary={lead.relevance_summary || 'No summary available'}
+                  problem_statement_detail={lead.problem_statement_detail || 'Not specified'}
+                  urgency_signals_detail={lead.urgency_signals_detail || 'Not specified'}
+                  competitors_mentioned={lead.competitive_context_detail || lead.competitors_mentioned || 'None'}
+                  buying_stage={lead.buying_stage_detail || (lead.is_solution_seeking ? 'Solution Seeking' : 'Researching')}
+                  sentiment={
+                    lead.urgency_signals_detail?.toLowerCase().includes('high') || lead.urgency_signals_detail?.toLowerCase().includes('immediate')
+                      ? 'High Urgency'
+                      : lead.urgency_signals_detail?.toLowerCase().includes('medium')
+                        ? 'Medium Urgency'
+                        : 'Low Urgency'
+                  }
+                  status={lead.status}
+                  product_name={activeProduct?.product_name || 'Product'}
+                  product_id={activeProductId || undefined}
+                  initiallyExpanded={index === 0}
+                  noAnimation={isShowcase}
+                />
+              ))}
+
+              {/* Paywall banner — shown only to free users when there are locked leads */}
+              {!isShowcase && lockedLeadCount > 0 && (
+                <div className="bg-gradient-to-br from-[#2C3E50] to-[#1E293B] rounded-2xl p-10 text-white text-center shadow-2xl">
+                  <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <Lock className="w-7 h-7 text-[#C2410C]" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">
+                    {lockedLeadCount} more high-intent lead{lockedLeadCount === 1 ? '' : 's'} found
+                  </h3>
+                  <p className="text-slate-300 text-sm leading-relaxed mb-8 max-w-md mx-auto">
+                    Your Reddit scan already found {filteredLeads.length} leads for{' '}
+                    <span className="font-bold text-white">{activeProduct?.product_name}</span>.
+                    Subscribe to unlock all of them and get hourly fresh leads.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button
+                      onClick={() => handleCheckout('starter')}
+                      disabled={checkoutLoading !== null}
+                      className="bg-white text-[#2C3E50] font-bold h-12 px-8 rounded-full hover:bg-slate-100 transition-all"
+                    >
+                      {checkoutLoading === 'starter' ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Starter — $29/mo · 1 product'
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => handleCheckout('pro')}
+                      disabled={checkoutLoading !== null}
+                      className="bg-[#C2410C] text-white font-bold h-12 px-8 rounded-full hover:bg-[#A3360A] shadow-lg shadow-[#C2410C]/30 transition-all"
+                    >
+                      {checkoutLoading === 'pro' ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Pro — $49/mo · 3 products'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="py-20 text-center bg-white border border-dashed border-slate-200 rounded-2xl">
               <p className="text-slate-400 font-bold uppercase tracking-widest text-sm font-mono">
