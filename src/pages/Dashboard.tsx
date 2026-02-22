@@ -11,21 +11,23 @@ import {
   Globe,
   BrainCircuit,
   Radar,
-  TrendingUp,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
   Search,
-  Loader2
+  Loader2,
+  ThumbsUp,
+  ThumbsDown
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useProducts } from '../hooks/useProducts';
 import { useLeads } from '../hooks/useLeads';
 import { useLeadMetrics } from '../hooks/useLeadMetrics';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../integrations/supabase/client';
+import { useAuth } from '../contexts/AuthContext';
 import { formatTimeAgo } from '../lib/formatTimeAgo';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: products = [], isLoading: isLoadingProducts } = useProducts();
 
   // Use the first product as the primary one for dashboard metrics
@@ -47,6 +49,21 @@ export default function Dashboard() {
       .sort((a, b) => b.intent_score - a.intent_score)
       .slice(0, 5);
   }, [allLeads]);
+
+  // Fetch recent feedback events for System Evolution panel
+  const { data: feedbackEvents = [] } = useQuery({
+    queryKey: ['feedback-events', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data } = await supabase
+        .from('lead_feedback')
+        .select('id, verdict, recorded_at, lead_id, leads(post_title, source_subreddit, intent_score, products(product_name))')
+        .order('recorded_at', { ascending: false })
+        .limit(6);
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
 
   // Calculate quality density (high intent / total)
   const qualityDensity = metrics.total > 0
@@ -266,20 +283,50 @@ export default function Dashboard() {
               </div>
            </div>
 
-           {/* RIGHT: System Evolution - keep static for now as noted in task description */}
+           {/* RIGHT: System Evolution — real feedback events */}
            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-full">
               <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
                  <div className="flex items-center gap-2">
                     <BrainCircuit className="w-4 h-4 text-[#C2410C]" />
                     <h2 className="text-base font-bold text-[#2C3E50]">System Evolution</h2>
                  </div>
-                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recent Activity</span>
+                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Feedback Log</span>
               </div>
 
-              <div className="p-6">
-                <div className="py-8 text-center text-slate-400 text-sm">
-                  System evolution events will appear here as the engine learns from your feedback.
-                </div>
+              <div className="p-4 flex-1 overflow-y-auto">
+                {feedbackEvents.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400 text-sm">
+                    No feedback yet. Rate leads to train the scoring engine.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {feedbackEvents.map((ev: any) => {
+                      const lead = ev.leads as any;
+                      const product = lead?.products as any;
+                      const isGood = ev.verdict === 'relevant';
+                      return (
+                        <div key={ev.id} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+                          <div className={cn(
+                            "mt-0.5 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center",
+                            isGood ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-500"
+                          )}>
+                            {isGood ? <ThumbsUp className="w-3 h-3" /> : <ThumbsDown className="w-3 h-3" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-slate-700 truncate">{lead?.post_title || 'Lead'}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] text-slate-400 font-mono">r/{lead?.source_subreddit}</span>
+                              {product?.product_name && (
+                                <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-mono">{product.product_name}</span>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">{formatTimeAgo(ev.recorded_at)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
            </div>
 

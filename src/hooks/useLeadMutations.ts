@@ -42,11 +42,11 @@ export function useUpdateLeadFeedback() {
 
       if (error) throw error;
 
-      // For bad leads, also call the reject-lead edge function to train rejection patterns
-      if (feedback === 'bad' && postUrl && productId) {
+      // For bad leads, call reject-lead to generate embedding + store rejection pattern
+      if (feedback === 'bad') {
         try {
           await supabase.functions.invoke('reject-lead', {
-            body: { post_url: postUrl, product_id: productId },
+            body: { lead_id: leadId, rejection_reason: 'other' },
           });
         } catch (edgeFnErr) {
           // Don't fail the whole mutation if edge function fails

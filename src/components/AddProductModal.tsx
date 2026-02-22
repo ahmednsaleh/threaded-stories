@@ -130,6 +130,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClos
 
       if (error) throw error;
 
+      // Kick off the lead discovery engine (non-fatal if it fails)
+      if (data?.id) {
+        supabase.functions.invoke('onboard-product', {
+          body: { product_id: data.id },
+        }).catch((e) => console.error('onboard-product error:', e));
+      }
+
       // Invalidate products cache so all product lists refresh
       queryClient.invalidateQueries({ queryKey: ['products'] });
 

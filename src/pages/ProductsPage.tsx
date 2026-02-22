@@ -175,7 +175,7 @@ export default function ProductsPage() {
 
   const handleAddProduct = () => {
     if (subscriptionTier === 'STARTER' && products.length >= 1) {
-      toast.error("Plan limit reached", { description: "Upgrade to Pro ($49/mo) to add more products." });
+      toast.error("Plan limit reached", { description: "Upgrade to Pro ($29/mo) to add more products." });
       return;
     }
     setIsModalOpen(true);
@@ -214,7 +214,7 @@ export default function ProductsPage() {
           {Array.from({ length: Math.max(0, SLOTS_COUNT - products.length) }).map((_, idx) => {
             const slotIndex = products.length + idx + 1;
             const isLocked = subscriptionTier === 'STARTER' && slotIndex > 1;
-            return <EmptySlot key={`slot-${slotIndex}`} isLocked={isLocked} onAction={isLocked ? () => {} : handleAddProduct} />;
+            return <EmptySlot key={`slot-${slotIndex}`} isLocked={isLocked} onAction={isLocked ? () => navigate('/settings') : handleAddProduct} />;
           })}
         </div>
       </div>
