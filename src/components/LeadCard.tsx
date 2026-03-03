@@ -48,6 +48,7 @@ export interface LeadCardProps {
   className?: string;
   post_url?: string;
   noAnimation?: boolean;
+  draft?: { id: string; draft_text: string } | null;
 }
 
 const renderHighlightedSummary = (text: string, competitors: string) => {
@@ -110,6 +111,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
   className,
   post_url = "https://reddit.com",
   noAnimation = false,
+  draft = null,
 }) => {
   const [isDraftVisible, setIsDraftVisible] = React.useState(false);
   const [isDrafting, setIsDrafting] = React.useState(false);
@@ -136,7 +138,9 @@ export const LeadCard: React.FC<LeadCardProps> = ({
   const cleanProblem = problem_statement_detail
     .replace(/[.!?;,]+$/, "")
     .toLowerCase();
-  const aiDraft = `Hey u/${username} — the ${cleanProblem} issue is something we ran into when building ${product_name}.\n\nHappy to share what worked for us if you're still exploring options. What does your current setup look like?`;
+  const aiDraft =
+    draft?.draft_text ??
+    `Hey u/${username} — the ${cleanProblem} issue is something we ran into when building ${product_name}.\n\nHappy to share what worked for us if you're still exploring options. What does your current setup look like?`;
 
   const getFreshnessWarning = (
     timeAgo: string,
@@ -160,11 +164,16 @@ export const LeadCard: React.FC<LeadCardProps> = ({
 
   const handleDraftToggle = () => {
     if (!isDraftVisible) {
-      setIsDrafting(true);
-      setTimeout(() => {
-        setIsDrafting(false);
+      if (draft) {
+        // Pre-generated draft exists — show instantly
         setIsDraftVisible(true);
-      }, 800);
+      } else {
+        setIsDrafting(true);
+        setTimeout(() => {
+          setIsDrafting(false);
+          setIsDraftVisible(true);
+        }, 800);
+      }
     } else {
       setIsDraftVisible(false);
     }
@@ -239,6 +248,13 @@ export const LeadCard: React.FC<LeadCardProps> = ({
           <div className="px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-100 text-[10px] font-bold uppercase tracking-wide">
             {sentiment}
           </div>
+
+          {/* Draft Ready badge — shown when a pre-generated draft exists */}
+          {draft && (
+            <div className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold uppercase tracking-wide flex items-center gap-1">
+              <Zap className="w-3 h-3 fill-emerald-700" /> Draft Ready
+            </div>
+          )}
         </div>
 
         {/* Feedback / Training Controls */}
@@ -452,14 +468,14 @@ export const LeadCard: React.FC<LeadCardProps> = ({
             <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest font-mono flex items-center gap-1">
               <Sparkles className="w-3 h-3" /> AI Suggestion
             </span>
-            <a
-              href={post_url}
-              target="_blank"
-              rel="noreferrer"
-              className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono hover:text-[#C2410C] flex items-center gap-1"
+            <Button
+              onClick={() => {
+                window.open(post_url, "_blank", "noreferrer");
+              }}
+              className="bg-[#C2410C] hover:bg-[#A3360A] text-white rounded-full h-9 px-4 font-bold text-xs"
             >
-              Reply on Reddit <ExternalLink className="w-3 h-3" />
-            </a>
+              <ExternalLink className="w-3 h-3 mr-2" /> Post Reply
+            </Button>
           </div>
           <p className="text-sm text-slate-700 font-mono whitespace-pre-wrap leading-relaxed">
             {aiDraft}
