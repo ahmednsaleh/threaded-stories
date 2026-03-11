@@ -26,6 +26,7 @@ import {
   useUpdateLeadFeedback,
 } from "../hooks/useLeadMutations";
 import { toast } from "sonner";
+import { supabase } from "../integrations/supabase/client";
 
 export interface LeadCardProps {
   id: string;
@@ -115,6 +116,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
 }) => {
   const [isDraftVisible, setIsDraftVisible] = React.useState(false);
   const [isDrafting, setIsDrafting] = React.useState(false);
+  const [liveDraftText, setLiveDraftText] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
   const [currentStatus, setCurrentStatus] = React.useState<FunnelStatus>(
     status as FunnelStatus,
@@ -139,6 +141,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
     .replace(/[.!?;,]+$/, "")
     .toLowerCase();
   const aiDraft =
+    liveDraftText ??
     draft?.draft_text ??
     `Hey u/${username} — the ${cleanProblem} issue is something we ran into when building ${product_name}.\n\nHappy to share what worked for us if you're still exploring options. What does your current setup look like?`;
 
@@ -162,17 +165,39 @@ export const LeadCard: React.FC<LeadCardProps> = ({
   };
   const freshnessWarning = getFreshnessWarning(time_ago);
 
-  const handleDraftToggle = () => {
+  const handleDraftToggle = async () => {
     if (!isDraftVisible) {
-      if (draft) {
+      if (draft || liveDraftText) {
         // Pre-generated draft exists — show instantly
         setIsDraftVisible(true);
       } else {
         setIsDrafting(true);
-        setTimeout(() => {
+        try {
+          const { data, error } = await supabase.functions.invoke(
+            "generate-draft",
+            {
+              body: {
+                lead_id: id,
+                post_title,
+                post_content,
+                problem_statement: problem_statement_detail,
+                product_name,
+                source_subreddit,
+              },
+            },
+          );
+          if (error) throw error;
+          setLiveDraftText(data.draft_text);
+        } catch (err: any) {
+          console.error("Draft generation failed:", err);
+          toast.error("Could not generate draft", {
+            description: err?.message,
+          });
+          // Show template fallback so the user isn't left with nothing
+        } finally {
           setIsDrafting(false);
           setIsDraftVisible(true);
-        }, 800);
+        }
       }
     } else {
       setIsDraftVisible(false);
