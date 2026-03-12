@@ -249,7 +249,7 @@ export default function ProductsPage() {
 
     // Show confirmation dialog
     const confirmed = window.confirm(
-      `Delete "${product.product_name}"?\n\nThis will permanently delete the product and all ${metrics?.total || 0} associated leads.\n\nThis cannot be undone.`,
+      `Delete "${product.product_name}"?\n\nThis will permanently delete the product and all associated leads.\n\nThis cannot be undone.`,
     );
 
     if (confirmed) {
