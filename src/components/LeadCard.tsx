@@ -27,6 +27,7 @@ import {
 } from "../hooks/useLeadMutations";
 import { toast } from "sonner";
 import { supabase } from "../integrations/supabase/client";
+import { trackEvent } from "../lib/trackEvent";
 
 export interface LeadCardProps {
   id: string;
@@ -167,6 +168,12 @@ export const LeadCard: React.FC<LeadCardProps> = ({
 
   const handleDraftToggle = async () => {
     if (!isDraftVisible) {
+      trackEvent("reply_drafted", {
+        lead_id: id,
+        product_id,
+        source_subreddit,
+        had_existing_draft: !!(draft || liveDraftText),
+      });
       if (draft || liveDraftText) {
         // Pre-generated draft exists — show instantly
         setIsDraftVisible(true);
@@ -219,6 +226,12 @@ export const LeadCard: React.FC<LeadCardProps> = ({
 
   const handleGoodLead = () => {
     updateFeedback.mutate({ leadId: id, feedback: "good" });
+    trackEvent("lead_approved", {
+      lead_id: id,
+      intent_score,
+      product_id,
+      source_subreddit,
+    });
   };
 
   const handleBadLead = () => {
@@ -228,6 +241,12 @@ export const LeadCard: React.FC<LeadCardProps> = ({
       feedback: "bad",
       postUrl: post_url,
       productId: product_id,
+    });
+    trackEvent("lead_rejected", {
+      lead_id: id,
+      intent_score,
+      product_id,
+      source_subreddit,
     });
   };
 
@@ -495,6 +514,15 @@ export const LeadCard: React.FC<LeadCardProps> = ({
             </span>
             <Button
               onClick={() => {
+                // Auto-copy draft to clipboard
+                navigator.clipboard.writeText(aiDraft);
+                toast.success(
+                  "Draft copied! Paste it in the Reddit comment box.",
+                  {
+                    duration: 3000,
+                  },
+                );
+                // Open Reddit post
                 window.open(post_url, "_blank", "noreferrer");
               }}
               className="bg-[#C2410C] hover:bg-[#A3360A] text-white rounded-full h-9 px-4 font-bold text-xs"
