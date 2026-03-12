@@ -118,7 +118,7 @@ export default function Dashboard() {
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col justify-between h-28">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
-                High Intent (8+)
+                High Intent (9+)
               </span>
               <Target className="w-4 h-4 text-[#C2410C]" />
             </div>
@@ -210,9 +210,9 @@ export default function Dashboard() {
                       <div
                         className={cn(
                           "w-10 text-center py-1 rounded-md border text-xs font-bold font-mono",
-                          lead.intent_score >= 8
+                          lead.intent_score >= 9
                             ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                            : lead.intent_score >= 5
+                            : lead.intent_score >= 7
                               ? "bg-amber-50 text-amber-700 border-amber-100"
                               : "bg-slate-50 text-slate-600 border-slate-200",
                         )}
