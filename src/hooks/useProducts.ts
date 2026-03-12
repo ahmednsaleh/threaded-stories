@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Product {
   id: string;
@@ -22,15 +22,18 @@ export function useProducts() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['products', user?.id],
+    queryKey: ["products", user?.id],
     queryFn: async (): Promise<Product[]> => {
       if (!user?.id) return [];
 
       const { data, error } = await supabase
-        .from('products')
-        .select('id, product_name, product_description, product_url, status, persona, pain_points_solved, jobs_to_be_done, business_type, keywords, subreddits, last_run_at, created_at')
-        .eq('user_id', user.id)
-        .order('last_run_at', { ascending: false, nullsFirst: false });
+        .from("products")
+        .select(
+          "id, product_name, product_description, product_url, status, persona, pain_points_solved, jobs_to_be_done, business_type, keywords, subreddits, last_run_at, created_at",
+        )
+        .eq("user_id", user.id)
+        .eq("product_name", "Threaddits")
+        .order("last_run_at", { ascending: false, nullsFirst: false });
 
       if (error) throw error;
       return data || [];

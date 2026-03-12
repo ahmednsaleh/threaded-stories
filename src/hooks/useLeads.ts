@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Lead {
   id: string;
@@ -25,8 +25,13 @@ export interface Lead {
   product_id: string | null;
 }
 
-export type TimeFilter = 'Last 24h' | 'Last Week' | 'Last Month' | 'All Time';
-export type StatusFilter = 'Show All' | 'New' | 'Contacted' | 'Won' | 'Rejected';
+export type TimeFilter = "Last 24h" | "Last Week" | "Last Month" | "All Time";
+export type StatusFilter =
+  | "Show All"
+  | "New"
+  | "Contacted"
+  | "Won"
+  | "Rejected";
 
 interface UseLeadsParams {
   productId: string | null;
@@ -38,42 +43,57 @@ interface UseLeadsParams {
 function getTimeFilterDate(filter: TimeFilter): Date | null {
   const now = new Date();
   switch (filter) {
-    case 'Last 24h':
+    case "Last 24h":
       return new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    case 'Last Week':
+    case "Last Week":
       return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    case 'Last Month':
+    case "Last Month":
       return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    case 'All Time':
+    case "All Time":
     default:
       return null;
   }
 }
 
-export function useLeads({ productId, statusFilter = 'Show All', timeFilter = 'All Time', searchQuery = '' }: UseLeadsParams) {
+export function useLeads({
+  productId,
+  statusFilter = "Show All",
+  timeFilter = "All Time",
+  searchQuery = "",
+}: UseLeadsParams) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['leads', user?.id, productId, statusFilter, timeFilter, searchQuery],
+    queryKey: [
+      "leads",
+      user?.id,
+      productId,
+      statusFilter,
+      timeFilter,
+      searchQuery,
+    ],
     queryFn: async (): Promise<Lead[]> => {
       if (!user?.id || !productId) return [];
 
       let query = supabase
-        .from('leads')
-        .select('id, post_url, post_title, post_content, author, source_subreddit, intent_score, buying_stage_detail, urgency_signals_detail, relevance_summary, problem_statement_detail, competitors_mentioned, competitive_context_detail, sentiment, status, user_feedback, created_utc, product_id, is_solution_seeking, is_problem_focused')
-        .eq('user_id', user.id)
-        .eq('product_id', productId)
-        .order('created_at', { ascending: false });
+        .from("leads")
+        .select(
+          "id, post_url, post_title, post_content, author, source_subreddit, intent_score, buying_stage_detail, urgency_signals_detail, relevance_summary, problem_statement_detail, competitors_mentioned, competitive_context_detail, sentiment, status, user_feedback, created_utc, product_id, is_solution_seeking, is_problem_focused",
+        )
+        .eq("user_id", user.id)
+        .eq("product_id", productId)
+        .gte("intent_score", 7)
+        .order("created_at", { ascending: false });
 
       // Apply status filter
-      if (statusFilter !== 'Show All') {
-        query = query.eq('status', statusFilter);
+      if (statusFilter !== "Show All") {
+        query = query.eq("status", statusFilter);
       }
 
       // Apply time filter
       const timeDate = getTimeFilterDate(timeFilter);
       if (timeDate) {
-        query = query.gte('created_at', timeDate.toISOString());
+        query = query.gte("created_at", timeDate.toISOString());
       }
 
       const { data, error } = await query;
@@ -87,7 +107,7 @@ export function useLeads({ productId, statusFilter = 'Show All', timeFilter = 'A
         filteredData = filteredData.filter(
           (lead) =>
             lead.post_title.toLowerCase().includes(lowerSearch) ||
-            lead.post_content.toLowerCase().includes(lowerSearch)
+            lead.post_content.toLowerCase().includes(lowerSearch),
         );
       }
 
